@@ -448,6 +448,35 @@ export default function Settings({
         )}
       </section>
 
+      {/* Backup & Import Card */}
+      <section className="settings-section glass">
+        <h3 className="section-title">Importação & Backup</h3>
+        <p className="sync-info-text" style={{ marginBottom: "14px", marginTop: "6px" }}>
+          Restaure seu histórico completo do aplicativo GymWag anterior ou importe um arquivo de backup em JSON.
+        </p>
+
+        <div className="backup-actions-column" style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          <button 
+            type="button" 
+            className="btn btn-lime"
+            onClick={async () => {
+              try {
+                const res = await fetch(import.meta.env.BASE_URL + "kademia_restored_backup.json");
+                if (!res.ok) throw new Error("Não foi possível carregar o arquivo de restauração.");
+                const data = await res.json();
+                if (window.confirm("Deseja importar os 4 treinos e 14 registros de peso recuperados da planilha do GymWag?")) {
+                  await onImportBackup(data);
+                }
+              } catch (err) {
+                alert("Erro ao carregar histórico: " + err.message);
+              }
+            }}
+          >
+            <SyncIcon size={18} /> Restaurar Histórico do GymWag (4 Treinos + Pesagens)
+          </button>
+        </div>
+      </section>
+
       {/* Theme Settings Card */}
       <section className="settings-section glass">
         <h3 className="section-title">Tema do Aplicativo</h3>

@@ -1,0 +1,1143 @@
+{
+  "kademia_workout_data": {
+    "routines": [
+      {
+        "id": "A",
+        "name": "Treino A - Peito, Ombros e Tríceps",
+        "description": "Ficha de treino A",
+        "exercises": [
+          {
+            "id": "A_ex_1",
+            "name": "Supino Inclinado com Halteres",
+            "sets": 4,
+            "reps": "8-10",
+            "load": "",
+            "restSeconds": 60
+          },
+          {
+            "id": "A_ex_2",
+            "name": "Supino Reto Máquina",
+            "sets": 3,
+            "reps": "10-12",
+            "load": "",
+            "restSeconds": 60
+          },
+          {
+            "id": "A_ex_3",
+            "name": "Crucifixo Máquina (Pec Deck)",
+            "sets": 3,
+            "reps": "12",
+            "load": "",
+            "restSeconds": 60
+          },
+          {
+            "id": "A_ex_4",
+            "name": "Desenvolvimento com Halteres",
+            "sets": 3,
+            "reps": "8-10",
+            "load": "",
+            "restSeconds": 60
+          },
+          {
+            "id": "A_ex_5",
+            "name": "Elevação Lateral com Halteres",
+            "sets": 4,
+            "reps": "12-15",
+            "load": "",
+            "restSeconds": 60
+          },
+          {
+            "id": "A_ex_6",
+            "name": "Tríceps Testa com Halteres",
+            "sets": 3,
+            "reps": "10-12",
+            "load": "",
+            "restSeconds": 60
+          },
+          {
+            "id": "A_ex_7",
+            "name": "Tríceps Pulley (Barra ou Corda)",
+            "sets": 3,
+            "reps": "12",
+            "load": "",
+            "restSeconds": 60
+          },
+          {
+            "id": "A_ex_8",
+            "name": "Abdominal Supra (Polia ou Solo)",
+            "sets": 3,
+            "reps": "15",
+            "load": "",
+            "restSeconds": 60
+          },
+          {
+            "id": "A_ex_9",
+            "name": "Cardio (Corrida/Trote)",
+            "sets": 1,
+            "reps": "20 min",
+            "load": "",
+            "restSeconds": 60
+          }
+        ]
+      },
+      {
+        "id": "B",
+        "name": "Treino B - Pernas Anterior e Panturrilhas",
+        "description": "Ficha de treino B",
+        "exercises": [
+          {
+            "id": "B_ex_1",
+            "name": "Agachamento Smith (ou Hack)",
+            "sets": 4,
+            "reps": "8-10",
+            "load": "",
+            "restSeconds": 60
+          },
+          {
+            "id": "B_ex_2",
+            "name": "Leg Press 45°",
+            "sets": 3,
+            "reps": "10-12",
+            "load": "",
+            "restSeconds": 60
+          },
+          {
+            "id": "B_ex_3",
+            "name": "Cadeira Extensora",
+            "sets": 3,
+            "reps": "12-15",
+            "load": "",
+            "restSeconds": 60
+          },
+          {
+            "id": "B_ex_4",
+            "name": "Flexora Deitada (Mesa Flexora)",
+            "sets": 3,
+            "reps": "10-12",
+            "load": "",
+            "restSeconds": 60
+          },
+          {
+            "id": "B_ex_5",
+            "name": "Panturrilha em Pé (no Leg Press)",
+            "sets": 4,
+            "reps": "15",
+            "load": "",
+            "restSeconds": 60
+          },
+          {
+            "id": "B_ex_6",
+            "name": "Panturrilha Sentado",
+            "sets": 3,
+            "reps": "15",
+            "load": "",
+            "restSeconds": 60
+          }
+        ]
+      },
+      {
+        "id": "C",
+        "name": "Treino C - Costas, Ombro Posterior e Bíceps",
+        "description": "Ficha de treino C",
+        "exercises": [
+          {
+            "id": "C_ex_1",
+            "name": "Puxada Alta Pronada",
+            "sets": 4,
+            "reps": "8-10",
+            "load": "",
+            "restSeconds": 60
+          },
+          {
+            "id": "C_ex_2",
+            "name": "Remada Unilateral com Haltere (Serrote)",
+            "sets": 3,
+            "reps": "8-10",
+            "load": "",
+            "restSeconds": 60
+          },
+          {
+            "id": "C_ex_3",
+            "name": "Puxada Alta com Triângulo",
+            "sets": 3,
+            "reps": "10-12",
+            "load": "",
+            "restSeconds": 60
+          },
+          {
+            "id": "C_ex_4",
+            "name": "Crucifixo Inverso (Máquina ou Haltere)",
+            "sets": 4,
+            "reps": "12-15",
+            "load": "",
+            "restSeconds": 60
+          },
+          {
+            "id": "C_ex_5",
+            "name": "Encolhimento com Halteres",
+            "sets": 3,
+            "reps": "12",
+            "load": "",
+            "restSeconds": 60
+          },
+          {
+            "id": "C_ex_6",
+            "name": "Rosca Direta com Barra W",
+            "sets": 3,
+            "reps": "10",
+            "load": "",
+            "restSeconds": 60
+          },
+          {
+            "id": "C_ex_7",
+            "name": "Rosca Martelo com Halteres",
+            "sets": 3,
+            "reps": "10-12",
+            "load": "",
+            "restSeconds": 60
+          },
+          {
+            "id": "C_ex_8",
+            "name": "Cardio (Corrida/Elíptico)",
+            "sets": 1,
+            "reps": "25 min",
+            "load": "",
+            "restSeconds": 60
+          }
+        ]
+      },
+      {
+        "id": "D",
+        "name": "Treino D - Posterior de Coxa, Glúteos e Core",
+        "description": "Ficha de treino D",
+        "exercises": [
+          {
+            "id": "D_ex_1",
+            "name": "Stiff com Halteres (ou Barra)",
+            "sets": 4,
+            "reps": "8-10",
+            "load": "",
+            "restSeconds": 60
+          },
+          {
+            "id": "D_ex_2",
+            "name": "Flexora Deitada (Mesa Flexora)",
+            "sets": 3,
+            "reps": "10-12",
+            "load": "",
+            "restSeconds": 60
+          },
+          {
+            "id": "D_ex_3",
+            "name": "Elevação Pélvica (Hip Thrust)",
+            "sets": 4,
+            "reps": "10-12",
+            "load": "",
+            "restSeconds": 60
+          },
+          {
+            "id": "D_ex_4",
+            "name": "Cadeira Abdutora",
+            "sets": 3,
+            "reps": "15",
+            "load": "",
+            "restSeconds": 60
+          },
+          {
+            "id": "D_ex_5",
+            "name": "Abdominal Infra (Elevação Pernas)",
+            "sets": 3,
+            "reps": "15",
+            "load": "",
+            "restSeconds": 60
+          },
+          {
+            "id": "D_ex_6",
+            "name": "Prancha Isométrica",
+            "sets": 3,
+            "reps": "45-60s",
+            "load": "",
+            "restSeconds": 60
+          },
+          {
+            "id": "D_ex_7",
+            "name": "Cardio (Corrida/Elíptico)",
+            "sets": 1,
+            "reps": "20 min",
+            "load": "",
+            "restSeconds": 60
+          }
+        ]
+      }
+    ],
+    "lastUpdated": "2026-07-27T23:09:21.260Z"
+  },
+  "kademia_history": [
+    {
+      "id": "1784675869000",
+      "date": "2026-07-21T23:17:49.000Z",
+      "routineId": "D",
+      "routineName": "Treino D - Posterior de Coxa, Glúteos e Coxas",
+      "duration": 50,
+      "notes": "",
+      "exercises": [
+        {
+          "name": "Agachamento Sumô",
+          "sets": 3,
+          "setsData": [
+            {
+              "setNum": 1,
+              "load": "12",
+              "reps": "10",
+              "completed": true
+            },
+            {
+              "setNum": 2,
+              "load": "12",
+              "reps": "12",
+              "completed": true
+            },
+            {
+              "setNum": 3,
+              "load": "12",
+              "reps": "12",
+              "completed": true
+            }
+          ]
+        },
+        {
+          "name": "Elevação de Quadril Máquina (Hip Thrust)",
+          "sets": 3,
+          "setsData": [
+            {
+              "setNum": 1,
+              "load": "10",
+              "reps": "12",
+              "completed": true
+            },
+            {
+              "setNum": 2,
+              "load": "10",
+              "reps": "12",
+              "completed": true
+            },
+            {
+              "setNum": 3,
+              "load": "10",
+              "reps": "12",
+              "completed": true
+            }
+          ]
+        },
+        {
+          "name": "Flexora em Pé",
+          "sets": 2,
+          "setsData": [
+            {
+              "setNum": 1,
+              "load": "10",
+              "reps": "12",
+              "completed": true
+            },
+            {
+              "setNum": 2,
+              "load": "10",
+              "reps": "10",
+              "completed": true
+            }
+          ]
+        },
+        {
+          "name": "Flexora Deitado",
+          "sets": 4,
+          "setsData": [
+            {
+              "setNum": 1,
+              "load": "30",
+              "reps": "12",
+              "completed": true
+            },
+            {
+              "setNum": 2,
+              "load": "30",
+              "reps": "12",
+              "completed": true
+            },
+            {
+              "setNum": 3,
+              "load": "35",
+              "reps": "8",
+              "completed": true
+            },
+            {
+              "setNum": 4,
+              "load": "30",
+              "reps": "4",
+              "completed": true
+            }
+          ]
+        },
+        {
+          "name": "Leg 180 (Foco em Quadríceps)",
+          "sets": 3,
+          "setsData": [
+            {
+              "setNum": 1,
+              "load": "60",
+              "reps": "12",
+              "completed": true
+            },
+            {
+              "setNum": 2,
+              "load": "60",
+              "reps": "10",
+              "completed": true
+            },
+            {
+              "setNum": 3,
+              "load": "60",
+              "reps": "10",
+              "completed": true
+            }
+          ]
+        },
+        {
+          "name": "Adução Máquina",
+          "sets": 3,
+          "setsData": [
+            {
+              "setNum": 1,
+              "load": "35",
+              "reps": "12",
+              "completed": true
+            },
+            {
+              "setNum": 2,
+              "load": "35",
+              "reps": "12",
+              "completed": true
+            },
+            {
+              "setNum": 3,
+              "load": "35",
+              "reps": "12",
+              "completed": true
+            }
+          ]
+        },
+        {
+          "name": "Abdominal Infra / Elevação Pernas",
+          "sets": 3,
+          "setsData": [
+            {
+              "setNum": 1,
+              "load": "",
+              "reps": "15",
+              "completed": false
+            },
+            {
+              "setNum": 2,
+              "load": "",
+              "reps": "15",
+              "completed": false
+            },
+            {
+              "setNum": 3,
+              "load": "",
+              "reps": "15",
+              "completed": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1784158772000",
+      "date": "2026-07-15T23:39:32.000Z",
+      "routineId": "C",
+      "routineName": "Treino C - Costas, Ombro Posterior e Bíceps",
+      "duration": 59,
+      "notes": "",
+      "exercises": [
+        {
+          "name": "Puxada Alta Pronada",
+          "sets": 3,
+          "setsData": [
+            {
+              "setNum": 1,
+              "load": "60",
+              "reps": "13",
+              "completed": true
+            },
+            {
+              "setNum": 2,
+              "load": "60",
+              "reps": "12",
+              "completed": true
+            },
+            {
+              "setNum": 3,
+              "load": "60",
+              "reps": "12",
+              "completed": true
+            }
+          ]
+        },
+        {
+          "name": "Puxada Alta Supinada",
+          "sets": 3,
+          "setsData": [
+            {
+              "setNum": 1,
+              "load": "60",
+              "reps": "12",
+              "completed": true
+            },
+            {
+              "setNum": 2,
+              "load": "60",
+              "reps": "12",
+              "completed": true
+            },
+            {
+              "setNum": 3,
+              "load": "60",
+              "reps": "12",
+              "completed": true
+            }
+          ]
+        },
+        {
+          "name": "Remada Baixa Neutra",
+          "sets": 3,
+          "setsData": [
+            {
+              "setNum": 1,
+              "load": "60",
+              "reps": "12",
+              "completed": true
+            },
+            {
+              "setNum": 2,
+              "load": "60",
+              "reps": "12",
+              "completed": true
+            },
+            {
+              "setNum": 3,
+              "load": "60",
+              "reps": "12",
+              "completed": true
+            }
+          ]
+        },
+        {
+          "name": "Remada Alta na Polia Baixa",
+          "sets": 3,
+          "setsData": [
+            {
+              "setNum": 1,
+              "load": "60",
+              "reps": "12",
+              "completed": true
+            },
+            {
+              "setNum": 2,
+              "load": "60",
+              "reps": "12",
+              "completed": true
+            },
+            {
+              "setNum": 3,
+              "load": "60",
+              "reps": "12",
+              "completed": true
+            }
+          ]
+        },
+        {
+          "name": "Encolhimento com Halteres",
+          "sets": 3,
+          "setsData": [
+            {
+              "setNum": 1,
+              "load": "40",
+              "reps": "12",
+              "completed": true
+            },
+            {
+              "setNum": 2,
+              "load": "40",
+              "reps": "12",
+              "completed": true
+            },
+            {
+              "setNum": 3,
+              "load": "40",
+              "reps": "12",
+              "completed": true
+            }
+          ]
+        },
+        {
+          "name": "Rosca Direta Barra",
+          "sets": 3,
+          "setsData": [
+            {
+              "setNum": 1,
+              "load": "14",
+              "reps": "12",
+              "completed": true
+            },
+            {
+              "setNum": 2,
+              "load": "14",
+              "reps": "10",
+              "completed": true
+            },
+            {
+              "setNum": 3,
+              "load": "14",
+              "reps": "10",
+              "completed": true
+            }
+          ]
+        },
+        {
+          "name": "Rosca Martelo Barra H",
+          "sets": 3,
+          "setsData": [
+            {
+              "setNum": 1,
+              "load": "10",
+              "reps": "12",
+              "completed": true
+            },
+            {
+              "setNum": 2,
+              "load": "12",
+              "reps": "12",
+              "completed": true
+            },
+            {
+              "setNum": 3,
+              "load": "12",
+              "reps": "12",
+              "completed": true
+            }
+          ]
+        },
+        {
+          "name": "Crucifixo Inverso (Máquina ou Halteres)",
+          "sets": 3,
+          "setsData": [
+            {
+              "setNum": 1,
+              "load": "60",
+              "reps": "12",
+              "completed": false
+            },
+            {
+              "setNum": 2,
+              "load": "60",
+              "reps": "12",
+              "completed": false
+            },
+            {
+              "setNum": 3,
+              "load": "",
+              "reps": "12",
+              "completed": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1784068733000",
+      "date": "2026-07-14T22:38:53.000Z",
+      "routineId": "B",
+      "routineName": "Treino B - Pernas Anterior e Panturrilhas",
+      "duration": 57,
+      "notes": "",
+      "exercises": [
+        {
+          "name": "Leg Press 45°",
+          "sets": 3,
+          "setsData": [
+            {
+              "setNum": 1,
+              "load": "40",
+              "reps": "15",
+              "completed": true
+            },
+            {
+              "setNum": 2,
+              "load": "80",
+              "reps": "12",
+              "completed": true
+            },
+            {
+              "setNum": 3,
+              "load": "80",
+              "reps": "12",
+              "completed": true
+            }
+          ]
+        },
+        {
+          "name": "Cadeira Extensora",
+          "sets": 3,
+          "setsData": [
+            {
+              "setNum": 1,
+              "load": "45",
+              "reps": "12",
+              "completed": true
+            },
+            {
+              "setNum": 2,
+              "load": "45",
+              "reps": "12",
+              "completed": true
+            },
+            {
+              "setNum": 3,
+              "load": "52",
+              "reps": "12",
+              "completed": true
+            }
+          ]
+        },
+        {
+          "name": "Flexora Deitada (Mesa Flexora)",
+          "sets": 3,
+          "setsData": [
+            {
+              "setNum": 1,
+              "load": "30",
+              "reps": "14",
+              "completed": true
+            },
+            {
+              "setNum": 2,
+              "load": "35",
+              "reps": "12",
+              "completed": true
+            },
+            {
+              "setNum": 3,
+              "load": "35",
+              "reps": "12",
+              "completed": true
+            }
+          ]
+        },
+        {
+          "name": "Panturrilha em Pé (no Leg Press)",
+          "sets": 4,
+          "setsData": [
+            {
+              "setNum": 1,
+              "load": "",
+              "reps": "15",
+              "completed": true
+            },
+            {
+              "setNum": 2,
+              "load": "",
+              "reps": "15",
+              "completed": true
+            },
+            {
+              "setNum": 3,
+              "load": "",
+              "reps": "15",
+              "completed": true
+            },
+            {
+              "setNum": 4,
+              "load": "",
+              "reps": "15",
+              "completed": true
+            }
+          ]
+        },
+        {
+          "name": "Panturrilha Sentado",
+          "sets": 3,
+          "setsData": [
+            {
+              "setNum": 1,
+              "load": "40",
+              "reps": "12",
+              "completed": true
+            },
+            {
+              "setNum": 2,
+              "load": "30",
+              "reps": "15",
+              "completed": true
+            },
+            {
+              "setNum": 3,
+              "load": "30",
+              "reps": "15",
+              "completed": true
+            }
+          ]
+        },
+        {
+          "name": "Agachamento Smith (ou Hack)",
+          "sets": 4,
+          "setsData": [
+            {
+              "setNum": 1,
+              "load": "",
+              "reps": "10",
+              "completed": false
+            },
+            {
+              "setNum": 2,
+              "load": "",
+              "reps": "10",
+              "completed": false
+            },
+            {
+              "setNum": 3,
+              "load": "",
+              "reps": "10",
+              "completed": false
+            },
+            {
+              "setNum": 4,
+              "load": "",
+              "reps": "10",
+              "completed": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1783984020000",
+      "date": "2026-07-13T23:07:00.000Z",
+      "routineId": "A",
+      "routineName": "Treino A - Peito, Ombros e Tríceps",
+      "duration": 36,
+      "notes": "Cardio: 10 minutos de trote a 11km/h (~1.83 km).",
+      "exercises": [
+        {
+          "name": "Supino Inclinado com Halteres",
+          "sets": 4,
+          "setsData": [
+            {
+              "setNum": 1,
+              "load": "10",
+              "reps": "12",
+              "completed": true
+            },
+            {
+              "setNum": 2,
+              "load": "15",
+              "reps": "12",
+              "completed": true
+            },
+            {
+              "setNum": 3,
+              "load": "15",
+              "reps": "12",
+              "completed": true
+            },
+            {
+              "setNum": 4,
+              "load": "15",
+              "reps": "12",
+              "completed": true
+            }
+          ]
+        },
+        {
+          "name": "Supino Reto Máquina",
+          "sets": 3,
+          "setsData": [
+            {
+              "setNum": 1,
+              "load": "10",
+              "reps": "10",
+              "completed": true
+            },
+            {
+              "setNum": 2,
+              "load": "10",
+              "reps": "12",
+              "completed": true
+            },
+            {
+              "setNum": 3,
+              "load": "10",
+              "reps": "12",
+              "completed": true
+            }
+          ]
+        },
+        {
+          "name": "Crucifixo Máquina (Pec Deck)",
+          "sets": 3,
+          "setsData": [
+            {
+              "setNum": 1,
+              "load": "50",
+              "reps": "12",
+              "completed": true
+            },
+            {
+              "setNum": 2,
+              "load": "50",
+              "reps": "8",
+              "completed": true
+            },
+            {
+              "setNum": 3,
+              "load": "50",
+              "reps": "8",
+              "completed": true
+            }
+          ]
+        },
+        {
+          "name": "Desenvolvimento com Halteres",
+          "sets": 3,
+          "setsData": [
+            {
+              "setNum": 1,
+              "load": "10",
+              "reps": "12",
+              "completed": true
+            },
+            {
+              "setNum": 2,
+              "load": "10",
+              "reps": "12",
+              "completed": true
+            },
+            {
+              "setNum": 3,
+              "load": "10",
+              "reps": "14",
+              "completed": true
+            }
+          ]
+        },
+        {
+          "name": "Elevação Lateral com Halteres",
+          "sets": 4,
+          "setsData": [
+            {
+              "setNum": 1,
+              "load": "10",
+              "reps": "12",
+              "completed": true
+            },
+            {
+              "setNum": 2,
+              "load": "10",
+              "reps": "10",
+              "completed": true
+            },
+            {
+              "setNum": 3,
+              "load": "10",
+              "reps": "10",
+              "completed": true
+            },
+            {
+              "setNum": 4,
+              "load": "10",
+              "reps": "15",
+              "completed": true
+            }
+          ]
+        },
+        {
+          "name": "Tríceps Testa com Halteres",
+          "sets": 3,
+          "setsData": [
+            {
+              "setNum": 1,
+              "load": "10",
+              "reps": "15",
+              "completed": true
+            },
+            {
+              "setNum": 2,
+              "load": "10",
+              "reps": "15",
+              "completed": true
+            },
+            {
+              "setNum": 3,
+              "load": "10",
+              "reps": "12",
+              "completed": true
+            }
+          ]
+        },
+        {
+          "name": "Tríceps Pulley (Barra ou Corda)",
+          "sets": 3,
+          "setsData": [
+            {
+              "setNum": 1,
+              "load": "25",
+              "reps": "12",
+              "completed": true
+            },
+            {
+              "setNum": 2,
+              "load": "25",
+              "reps": "15",
+              "completed": true
+            },
+            {
+              "setNum": 3,
+              "load": "30",
+              "reps": "12",
+              "completed": true
+            }
+          ]
+        },
+        {
+          "name": "Abdominal Supra (Polia ou Solo)",
+          "sets": 3,
+          "setsData": [
+            {
+              "setNum": 1,
+              "load": "0",
+              "reps": "15",
+              "completed": true
+            },
+            {
+              "setNum": 2,
+              "load": "0",
+              "reps": "15",
+              "completed": true
+            },
+            {
+              "setNum": 3,
+              "load": "0",
+              "reps": "15",
+              "completed": true
+            }
+          ]
+        },
+        {
+          "name": "Cardio (Corrida/Trote)",
+          "sets": 1,
+          "setsData": [
+            {
+              "setNum": 1,
+              "load": "1.8",
+              "reps": "Trote",
+              "completed": true
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "kademia_profile": {
+    "name": "Wagner",
+    "weight": 78.5,
+    "height": 175,
+    "secondaryColor": ""
+  },
+  "kademia_profile_history": [
+    {
+      "date": "2026-07-14T03:46:12.000Z",
+      "name": "Wagner",
+      "weight": 78.5,
+      "height": 175
+    },
+    {
+      "date": "2026-07-14T17:12:18.000Z",
+      "name": "Wagner",
+      "weight": 78.5,
+      "height": 175
+    },
+    {
+      "date": "2026-07-14T17:15:13.000Z",
+      "name": "Wagner",
+      "weight": 78.5,
+      "height": 175
+    },
+    {
+      "date": "2026-07-14T17:15:58.000Z",
+      "name": "Wagner",
+      "weight": 78.5,
+      "height": 175
+    },
+    {
+      "date": "2026-07-14T17:23:02.000Z",
+      "name": "Wagner",
+      "weight": 78.5,
+      "height": 175
+    },
+    {
+      "date": "2026-07-14T23:23:41.000Z",
+      "name": "Wagner",
+      "weight": 78.5,
+      "height": 175
+    },
+    {
+      "date": "2026-07-15T00:31:16.000Z",
+      "name": "Wagner",
+      "weight": 78.5,
+      "height": 175
+    },
+    {
+      "date": "2026-07-15T00:44:59.000Z",
+      "name": "Wagner",
+      "weight": 78.5,
+      "height": 175
+    },
+    {
+      "date": "2026-07-15T00:53:43.000Z",
+      "name": "Wagner",
+      "weight": 78.5,
+      "height": 175
+    },
+    {
+      "date": "2026-07-15T01:21:32.000Z",
+      "name": "Wagner",
+      "weight": 78.5,
+      "height": 175
+    },
+    {
+      "date": "2026-07-15T01:26:28.000Z",
+      "name": "Wagner",
+      "weight": 78.5,
+      "height": 175
+    },
+    {
+      "date": "2026-07-15T01:29:48.000Z",
+      "name": "Wagner",
+      "weight": 78.5,
+      "height": 175
+    },
+    {
+      "date": "2026-07-15T02:20:40.000Z",
+      "name": "Wagner",
+      "weight": 78.5,
+      "height": 175
+    },
+    {
+      "date": "2026-07-22T13:34:53.000Z",
+      "name": "Wagner",
+      "weight": 78.5,
+      "height": 175
+    }
+  ],
+  "version": "1.1.0",
+  "exportedAt": "2026-07-27T23:09:21.260Z"
+}
