@@ -74,8 +74,8 @@ export default function Dashboard({ workoutData, history, onStartWorkout, onSetA
         </div>
         <div className="header-actions">
           <div className="streak-badge glass">
-            <TrophyIcon size={20} className="badge-icon" />
-            <span>{totalWorkouts} treinos</span>
+            <TrophyIcon size={18} className="badge-icon" />
+            <span><strong>{totalWorkouts}</strong> treinos</span>
           </div>
           {syncProps && (
             <SyncStatusIndicator
