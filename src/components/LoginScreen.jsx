@@ -1,125 +1,57 @@
 import React, { useState } from "react";
 import { 
   SyncIcon, 
-  HelpCircleIcon, 
   SunIcon, 
   MoonIcon,
-  BarbellIcon,
-  UserIcon
+  BarbellIcon
 } from "./Icons";
-import { 
-  requestAccessToken, 
-  initTokenClient, 
-  fetchGoogleUserInfo,
-  getOrCreateFolder,
-  getOrCreateSpreadsheet
-} from "../services/googleDriveService";
-import { GOOGLE_CLIENT_ID } from "../config";
+import { loginWithGoogle } from "../services/firebaseService";
 
 export default function LoginScreen({
   theme,
   onToggleTheme,
-  googleSyncSettings,
-  onUpdateGoogleSyncSettings,
   onUpdateProfile,
-  profile
+  profile,
+  onLoginSuccess
 }) {
-  const [customClientId, setCustomClientId] = useState(googleSyncSettings.clientId || "");
-  const [showHelp, setShowHelp] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [loadingMessage, setLoadingMessage] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
-  const envClientId = GOOGLE_CLIENT_ID || import.meta.env.VITE_GOOGLE_CLIENT_ID;
-  const activeClientId = envClientId || customClientId;
-
-  const handleConnectGoogle = () => {
-    if (!activeClientId) {
-      setErrorMsg("Por favor, insira o Google Client ID para continuar.");
-      return;
-    }
-
+  const handleConnectGoogle = async () => {
     setIsConnecting(true);
-    setLoadingMessage("Aguardando autorização no Google...");
     setErrorMsg("");
 
     try {
-      initTokenClient(
-        activeClientId,
-        async (tokenResponse) => {
-          try {
-            setLoadingMessage("Obtendo informações da sua conta...");
-            const token = tokenResponse.access_token;
-            const expiryTime = Date.now() + tokenResponse.expires_in * 1000;
-            
-            // 1. Fetch user info
-            const userInfo = await fetchGoogleUserInfo(token);
-            
-            // 2. Setup Folder and Sheets
-            setLoadingMessage("Buscando pasta do KademIA no Google Drive...");
-            const folderId = await getOrCreateFolder(token);
-            
-            setLoadingMessage("Preparando planilhas de treino...");
-            const spreadsheetId = await getOrCreateSpreadsheet(token, folderId);
+      const res = await loginWithGoogle();
+      if (res.success && res.user) {
+        const user = res.user;
+        const displayName = user.displayName || "";
+        const givenName = displayName.split(" ")[0];
 
-            // 3. Save sync settings
-            onUpdateGoogleSyncSettings({
-              connected: true,
-              token,
-              tokenExpiry: expiryTime,
-              email: userInfo.email,
-              userName: userInfo.name,
-              picture: userInfo.picture,
-              folderId,
-              spreadsheetId,
-              clientId: envClientId ? "" : customClientId
-            });
-
-            // 4. Update profile name if it was default
-            if (userInfo.given_name && (!profile.name || profile.name === "Wagner")) {
-              onUpdateProfile({
-                ...profile,
-                name: userInfo.given_name
-              });
-            }
-          } catch (err) {
-            console.error("Setup error during login:", err);
-            setErrorMsg("Falha ao configurar planilha no Drive: " + err.message);
-            setIsConnecting(false);
-            setLoadingMessage("");
-          }
-        },
-        (error) => {
-          console.error("GIS Auth Error:", error);
-          setErrorMsg("Erro de autenticação com o Google: " + error.message);
-          setIsConnecting(false);
-          setLoadingMessage("");
+        // Update profile name if it was empty or default
+        if (givenName && (!profile?.name || profile?.name === "Wagner")) {
+          onUpdateProfile({
+            ...profile,
+            name: givenName
+          });
         }
-      );
 
-      requestAccessToken();
+        if (onLoginSuccess) {
+          onLoginSuccess(user);
+        }
+      } else {
+        setErrorMsg("Falha ao entrar com o Google: " + (res.error || "Erro desconhecido"));
+      }
     } catch (err) {
-      setErrorMsg("Erro ao inicializar cliente do Google: " + err.message);
+      console.error("Erro no login Firebase Google:", err);
+      setErrorMsg("Erro de autenticação: " + err.message);
+    } finally {
       setIsConnecting(false);
-      setLoadingMessage("");
     }
   };
 
   return (
     <div className="login-screen-container animate-fade-in">
-      {/* Dynamic step-by-step loading overlay */}
-      {isConnecting && loadingMessage && (
-        <div className="login-loading-overlay animate-fade-in">
-          <div className="login-loading-card glass animate-slide-up">
-            <div className="loader-ring">
-              <div></div><div></div><div></div><div></div>
-            </div>
-            <p className="loading-step-text">{loadingMessage}</p>
-            <span className="loading-subtext">Por favor, mantenha o app aberto e não feche esta janela.</span>
-          </div>
-        </div>
-      )}
-
       {/* Floating Theme Button */}
       <button type="button" className="theme-toggle-btn" onClick={onToggleTheme}>
         {theme === "dark" ? <SunIcon size={20} /> : <MoonIcon size={20} />}
@@ -132,59 +64,22 @@ export default function LoginScreen({
             <BarbellIcon size={36} className="login-logo-icon" />
           </div>
           <h1 className="login-title">Kadem<span>IA</span></h1>
-          <p className="login-subtitle">Treino & Sincronização em Nuvem</p>
+          <p className="login-subtitle">Seu treino, no seu ritmo.</p>
         </div>
 
         <p className="login-description">
-          Para acessar o KademIA e salvar automaticamente suas fichas, peso, altura e histórico de treinos no seu Google Drive, conecte-se com sua conta Google.
+          Conecte-se com sua conta Google para salvar e sincronizar automaticamente suas fichas, cargas e histórico de treinos na nuvem.
         </p>
 
         {errorMsg && <div className="login-error-banner">{errorMsg}</div>}
 
         <div className="login-form-area">
-          {/* Client ID Entry if not in env */}
-          {!envClientId && (
-            <div className="input-group login-client-group">
-              <div className="label-with-help">
-                <label>Google Client ID</label>
-                <button 
-                  type="button" 
-                  className="btn-help-icon" 
-                  onClick={() => setShowHelp(!showHelp)}
-                  title="Ajuda para configurar credencial"
-                >
-                  <HelpCircleIcon size={18} />
-                </button>
-              </div>
-              <input 
-                type="text" 
-                value={customClientId} 
-                onChange={(e) => setCustomClientId(e.target.value)} 
-                placeholder="Cole seu Client ID aqui"
-              />
-            </div>
-          )}
-
-          {/* Help Block */}
-          {showHelp && !envClientId && (
-            <div className="help-box glass animate-slide-up">
-              <h4>Como criar seu Client ID no Google:</h4>
-              <ol>
-                <li>Acesse o <a href="https://console.cloud.google.com/" target="_blank" rel="noreferrer">Google Cloud Console</a>.</li>
-                <li>Crie um projeto e configure a "Tela de consentimento OAuth" com os escopos de <code>drive.file</code> e <code>spreadsheets</code>.</li>
-                <li>Crie uma credencial de <strong>"ID do cliente OAuth"</strong> para <strong>"Aplicativo da Web"</strong>.</li>
-                <li>Em "Origens JavaScript autorizadas", adicione o endereço em que você abre o app (Ex: <code>http://localhost:5173</code>).</li>
-                <li>Copie o ID gerado e cole no campo acima.</li>
-              </ol>
-            </div>
-          )}
-
           {/* Connect Button */}
           <button 
             type="button" 
             className="btn btn-primary login-connect-btn"
             onClick={handleConnectGoogle}
-            disabled={isConnecting || (!envClientId && !customClientId)}
+            disabled={isConnecting}
           >
             {isConnecting ? (
               <>
@@ -275,22 +170,21 @@ export default function LoginScreen({
         }
 
         .login-description {
-          font-size: 0.88rem;
+          font-size: 0.9rem;
           color: var(--color-text-secondary);
-          line-height: 1.45;
+          line-height: 1.5;
           margin-bottom: 24px;
         }
 
         .login-error-banner {
           width: 100%;
-          padding: 10px 12px;
-          background-color: var(--status-error-glow);
+          padding: 10px 14px;
+          background: var(--status-error-glow);
+          border: 1px solid var(--status-error);
           color: var(--status-error);
-          border: 1px solid var(--status-error-glow);
-          border-radius: 8px;
-          font-size: 0.8rem;
-          font-weight: 500;
-          margin-bottom: 20px;
+          border-radius: 12px;
+          font-size: 0.82rem;
+          margin-bottom: 16px;
           text-align: left;
         }
 
@@ -298,80 +192,13 @@ export default function LoginScreen({
           width: 100%;
           display: flex;
           flex-direction: column;
-          gap: 16px;
-        }
-
-        .login-client-group {
-          text-align: left;
-        }
-
-        .label-with-help {
-          display: flex;
           align-items: center;
-          gap: 6px;
-          margin-bottom: 4px;
-        }
-
-        .label-with-help label {
-          font-size: 0.78rem;
-          color: var(--color-text-secondary);
-          font-weight: 600;
-        }
-
-        .btn-help-icon {
-          background: none;
-          border: none;
-          color: var(--color-text-muted);
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          padding: 0;
-        }
-
-        .login-client-group input {
-          padding: 12px 14px;
-          border-radius: 10px;
-          border: 1px solid var(--border-color);
-          background-color: var(--bg-primary);
-          color: var(--color-text-primary);
-          font-family: var(--font-body);
-          font-size: 0.88rem;
-          outline: none;
-          width: 100%;
-        }
-
-        .login-client-group input:focus {
-          border-color: var(--border-focus);
-        }
-
-        .help-box {
-          padding: 12px;
-          background-color: var(--bg-card-hover);
-          font-size: 0.75rem;
-          text-align: left;
-        }
-
-        .help-box h4 {
-          margin-bottom: 4px;
-          font-weight: 600;
-        }
-
-        .help-box ol {
-          padding-left: 14px;
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-        }
-
-        .help-box a {
-          color: var(--accent-purple);
-          text-decoration: underline;
         }
 
         .login-connect-btn {
           width: 100%;
           padding: 14px;
-          font-size: 0.95rem;
+          font-size: 1rem;
           border-radius: 100px;
           display: flex;
           align-items: center;
@@ -380,102 +207,10 @@ export default function LoginScreen({
         }
 
         .google-logo-svg {
+          flex-shrink: 0;
           background: white;
           border-radius: 50%;
           padding: 2px;
-        }
-
-        @keyframes spinFast {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-
-        .spinner-animation {
-          animation: spinFast 1s linear infinite;
-        }
-
-        /* Loading Overlay Styles */
-        .login-loading-overlay {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(10, 10, 10, 0.7);
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 1000;
-          padding: 20px;
-        }
-
-        .login-loading-card {
-          width: 100%;
-          max-width: 320px;
-          padding: 35px 25px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          text-align: center;
-          background: var(--bg-secondary);
-          border: 1px solid var(--border-color);
-          border-radius: 28px;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        }
-
-        .loader-ring {
-          display: inline-block;
-          position: relative;
-          width: 64px;
-          height: 64px;
-          margin-bottom: 20px;
-        }
-
-        .loader-ring div {
-          box-sizing: border-box;
-          display: block;
-          position: absolute;
-          width: 48px;
-          height: 48px;
-          margin: 8px;
-          border: 4px solid var(--accent-purple);
-          border-radius: 50%;
-          animation: loader-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-          border-color: var(--accent-purple) transparent transparent transparent;
-        }
-
-        .loader-ring div:nth-child(1) {
-          animation-delay: -0.45s;
-        }
-
-        .loader-ring div:nth-child(2) {
-          animation-delay: -0.3s;
-        }
-
-        .loader-ring div:nth-child(3) {
-          animation-delay: -0.15s;
-        }
-
-        @keyframes loader-ring {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-
-        .loading-step-text {
-          font-size: 0.92rem;
-          font-weight: 600;
-          color: var(--color-text-primary);
-          margin-bottom: 8px;
-          min-height: 24px;
-        }
-
-        .loading-subtext {
-          font-size: 0.72rem;
-          color: var(--color-text-secondary);
-          line-height: 1.4;
         }
       `}</style>
     </div>

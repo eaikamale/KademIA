@@ -9,20 +9,13 @@ import History from "./components/History";
 import Settings from "./components/Settings";
 import LoginScreen from "./components/LoginScreen";
 import SyncStatusIndicator from "./components/SyncStatusIndicator";
-import { GOOGLE_CLIENT_ID } from "./config";
 import { BarbellIcon, CalendarIcon, HistoryIcon, UserIcon, ClipboardIcon } from "./components/Icons";
 import { 
-  loadGoogleGIS, 
-  initTokenClient,
-  renewTokenSilently, 
-  performFullSync, 
-  appendProfile, 
-  appendWorkoutSession, 
-  syncRoutines,
-  syncBidirectional,
-  clearProfileHistorySheet,
-  clearWorkoutHistorySheet
-} from "./services/googleDriveService";
+  subscribeAuthState, 
+  saveUserDataToFirestore, 
+  fetchUserDataFromFirestore,
+  subscribeUserDataFromFirestore 
+} from "./services/firebaseService";
 
 // Helper to deduplicate local history data (both session duplicates and set duplicates)
 function deduplicateHistory(historyList) {
@@ -98,9 +91,8 @@ function deduplicateHistory(historyList) {
   return Object.values(sessionsMap).sort((a, b) => new Date(b.date) - new Date(a.date));
 }
 
-// Helper to deduplicate local profile history data
-function deduplicateProfileHistory(profileHistoryList) {
-  if (!Array.isArray(profileHistoryList)) return [];
+function deduplicateProfileHistory(profileHistList) {
+  if (!Array.isArray(profileHistList)) return [];
 
   const getNormalizedDateKey = (dateStr) => {
     if (!dateStr) return "";
@@ -113,73 +105,41 @@ function deduplicateProfileHistory(profileHistoryList) {
     }
   };
 
-  const profileMap = {};
-  profileHistoryList.forEach(item => {
+  const map = {};
+  profileHistList.forEach(item => {
     if (!item) return;
     const key = getNormalizedDateKey(item.date);
-    if (!profileMap[key]) {
-      profileMap[key] = item;
+    if (!map[key]) {
+      map[key] = item;
     }
   });
 
-  return Object.values(profileMap).sort((a, b) => new Date(b.date) - new Date(a.date));
+  return Object.values(map).sort((a, b) => new Date(a.date) - new Date(b.date));
 }
 
-// Helper to sanitize workoutData and ensure every exercise has a unique ID
-function sanitizeWorkoutData(data) {
-  if (!data || !Array.isArray(data.routines)) return data;
-  return {
-    ...data,
-    routines: data.routines.map(routine => {
-      if (!routine || !Array.isArray(routine.exercises)) return routine;
-      return {
-        ...routine,
-        exercises: routine.exercises.map((ex, idx) => {
-          if (!ex) return ex;
-          return {
-            ...ex,
-            id: ex.id || `ex-${routine.id}-${idx + 1}`
-          };
-        })
-      };
-    })
-  };
+function sanitizeWorkoutData(workoutData) {
+  if (!workoutData || !Array.isArray(workoutData.routines)) {
+    return defaultWorkout;
+  }
+  return workoutData;
 }
 
 export default function App() {
-  // Navigation State
-  const [activeTab, setActiveTab] = useState("dashboard"); // dashboard, routines, history
-  const [hasEnteredApp, setHasEnteredApp] = useState(() => {
-    if (window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone) {
-      return true;
-    }
-    return sessionStorage.getItem("kademia_session_entered") === "true" ||
-           sessionStorage.getItem("gymrot_session_entered") === "true" ||
-           sessionStorage.getItem("fittrack_session_entered") === "true";
-  });
-
-  // Theme State
   const [theme, setTheme] = useState(() => {
     const saved = localStorage.getItem("kademia_theme") ||
                   localStorage.getItem("gymrot_theme") ||
                   localStorage.getItem("fittrack_theme");
-    if (saved) return saved;
-    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    return saved || "dark";
   });
 
-  // PWA Install prompt state
-  const [deferredPrompt, setDeferredPrompt] = useState(() => window.deferredPrompt || null);
-
-  // App Data State
+  // App data states
   const [workoutData, setWorkoutData] = useState(() => {
     try {
       const saved = localStorage.getItem("kademia_workout_data") ||
                     localStorage.getItem("gymrot_workout_data") ||
                     localStorage.getItem("fittrack_workout_data");
-      const parsed = saved ? JSON.parse(saved) : defaultWorkout;
-      return sanitizeWorkoutData(parsed);
+      return saved ? JSON.parse(saved) : defaultWorkout;
     } catch (e) {
-      console.error("Erro ao carregar workoutData:", e);
       return defaultWorkout;
     }
   });
@@ -189,87 +149,77 @@ export default function App() {
       const saved = localStorage.getItem("kademia_history") ||
                     localStorage.getItem("gymrot_history") ||
                     localStorage.getItem("fittrack_history");
-      const parsed = saved ? JSON.parse(saved) : [];
-      return deduplicateHistory(parsed);
+      const list = saved ? JSON.parse(saved) : [];
+      return deduplicateHistory(list);
     } catch (e) {
-      console.error("Erro ao carregar history:", e);
       return [];
     }
   });
 
-  // Profile State
   const [profile, setProfile] = useState(() => {
     try {
       const saved = localStorage.getItem("kademia_profile");
-      const parsed = saved ? JSON.parse(saved) : { name: "Wagner", weight: "", height: "", secondaryColor: "" };
+      const defaultGreen = theme === "dark" ? "#ADFF2F" : "#008A47";
       const savedSecondary = localStorage.getItem("kademia_secondary_color");
-      if (savedSecondary && !parsed.secondaryColor) {
-        parsed.secondaryColor = savedSecondary;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (!parsed.secondaryColor && savedSecondary) {
+          parsed.secondaryColor = savedSecondary;
+        }
+        return parsed;
       }
-      return parsed;
-    } catch (e) {
-      console.error("Erro ao carregar profile:", e);
       return { 
         name: "Wagner", 
-        weight: "", 
-        height: "", 
+        weight: 78.5, 
+        height: 175,
         secondaryColor: localStorage.getItem("kademia_secondary_color") || "" 
       };
+    } catch (e) {
+      return { name: "Wagner", weight: 78.5, height: 175, secondaryColor: "" };
     }
   });
 
   const [profileHistory, setProfileHistory] = useState(() => {
     try {
       const saved = localStorage.getItem("kademia_profile_history");
-      const parsed = saved ? JSON.parse(saved) : [];
-      return deduplicateProfileHistory(parsed);
+      return saved ? JSON.parse(saved) : [];
     } catch (e) {
-      console.error("Erro ao carregar profileHistory:", e);
       return [];
     }
   });
 
-  // Default luminous green color based on active theme
+  // Apply custom accent color dynamically on boot and theme toggle
   const defaultGreen = theme === "dark" ? "#ADFF2F" : "#008A47";
   const activeUserColor = profile?.secondaryColor || localStorage.getItem("kademia_secondary_color") || defaultGreen;
-
-  // Apply custom accent color to all luminous green CSS variables on body & html
+  
   useEffect(() => {
     applyAccentColorToDOM(activeUserColor);
   }, [activeUserColor, theme]);
 
-  // Google Sync Settings State
+  // Cloud sync state (Firebase Auth / Firestore)
   const [googleSyncSettings, setGoogleSyncSettings] = useState(() => {
     try {
       const saved = localStorage.getItem("kademia_google_sync");
-      return saved ? JSON.parse(saved) : {
-        connected: false,
-        token: "",
-        tokenExpiry: 0,
-        email: "",
-        userName: "",
-        picture: "",
-        folderId: "",
-        spreadsheetId: "",
-        clientId: "",
-        autoSync: true
-      };
+      return saved ? JSON.parse(saved) : { connected: false };
     } catch (e) {
-      console.error("Erro ao carregar googleSyncSettings:", e);
-      return {
-        connected: false,
-        token: "",
-        tokenExpiry: 0,
-        email: "",
-        userName: "",
-        picture: "",
-        folderId: "",
-        spreadsheetId: "",
-        clientId: "",
-        autoSync: true
-      };
+      return { connected: false };
     }
   });
+
+  const [syncStatus, setSyncStatus] = useState(() => {
+    return localStorage.getItem("kademia_sync_status") || "synced";
+  });
+  const [lastSyncTime, setLastSyncTime] = useState(() => {
+    return localStorage.getItem("kademia_last_sync_time") || "";
+  });
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  // App navigation state
+  const [hasEnteredApp, setHasEnteredApp] = useState(() => {
+    return sessionStorage.getItem("kademia_session_entered") === "true";
+  });
+
+  const [activeTab, setActiveTab] = useState("dashboard");
 
   // Active workout state (persisted to localStorage)
   const [activeWorkoutRoutine, setActiveWorkoutRoutine] = useState(() => {
@@ -281,21 +231,27 @@ export default function App() {
     }
   });
 
-  // Ref to hold latest state for sync events
-  const latestDataRef = useRef({ profileHistory, profile, workoutData, history, googleSyncSettings });
-  latestDataRef.current = { profileHistory, profile, workoutData, history, googleSyncSettings };
-
-  // Sync Status States
-  const [syncStatus, setSyncStatus] = useState(() => {
-    return localStorage.getItem("kademia_sync_status") || "synced";
-  });
-  const [lastSyncTime, setLastSyncTime] = useState(() => {
-    return localStorage.getItem("kademia_last_sync_time") || "";
-  });
-  const [isOnline, setIsOnline] = useState(() => navigator.onLine);
-
-  // Exit App Toast confirmation state
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showExitMessage, setShowExitMessage] = useState(false);
+
+  // Latest state ref for callbacks
+  const latestDataRef = useRef({
+    googleSyncSettings,
+    workoutData,
+    history,
+    profile,
+    profileHistory
+  });
+
+  useEffect(() => {
+    latestDataRef.current = {
+      googleSyncSettings,
+      workoutData,
+      history,
+      profile,
+      profileHistory
+    };
+  });
 
   // Apply theme class to body
   useEffect(() => {
@@ -346,110 +302,97 @@ export default function App() {
     };
   }, []);
 
-  // Load Google GIS & handle silent token renewal
+  // Subscribe to Firebase Auth State (Session persistence)
   useEffect(() => {
-    loadGoogleGIS()
-      .then(() => {
-        const clientId = GOOGLE_CLIENT_ID || import.meta.env.VITE_GOOGLE_CLIENT_ID || googleSyncSettings.clientId;
-        if (googleSyncSettings.connected && clientId) {
-          const windowGoogleInterval = setInterval(() => {
-            if (window.google && window.google.accounts) {
-              clearInterval(windowGoogleInterval);
-              
-              initTokenClient(
-                clientId,
-                (tokenResponse) => {
-                  const token = tokenResponse.access_token;
-                  const expiry = Date.now() + tokenResponse.expires_in * 1000;
-                  setGoogleSyncSettings(prev => ({
-                    ...prev,
-                    token,
-                    tokenExpiry: expiry
-                  }));
-                },
-                (err) => console.error("Silent client init error:", err)
-              );
+    const unsubscribeAuth = subscribeAuthState(async (user) => {
+      if (user) {
+        setGoogleSyncSettings({
+          connected: true,
+          email: user.email || "",
+          userName: user.displayName || "",
+          picture: user.photoURL || "",
+          uid: user.uid
+        });
 
-              // Always verify the session on mount by doing a silent renewal.
-              // If it fails because the user logged out of their Google Account, we log out here to show login.
-              if (googleSyncSettings.email) {
-                renewTokenSilently(googleSyncSettings.email)
-                  .then((tokenResponse) => {
-                    console.log("Google token renewed and verified silently on mount.");
-                    setGoogleSyncSettings(prev => ({
-                      ...prev,
-                      token: tokenResponse.access_token,
-                      tokenExpiry: Date.now() + tokenResponse.expires_in * 1000
-                    }));
-                  })
-                  .catch((err) => {
-                    console.warn("Silent token renewal failed on mount:", err);
-                    if (err && (err.error === "interaction_required" || err.error === "login_required" || err.error === "consent_required")) {
-                      console.log("Google Account session closed. Disconnecting from app to prompt re-login.");
-                      setGoogleSyncSettings(prev => ({
-                        ...prev,
-                        connected: false,
-                        token: "",
-                        tokenExpiry: 0
-                      }));
-                    } else {
-                      // Offline/network error, clear current token so it retries, but don't disconnect
-                      handleTokenExpired();
-                    }
-                  });
-              }
+        // Fetch initial user data from Firestore on login
+        try {
+          const remoteData = await fetchUserDataFromFirestore(user.uid);
+          if (remoteData) {
+            if (remoteData.workoutData) {
+              const cleanWd = sanitizeWorkoutData(remoteData.workoutData);
+              setWorkoutData(cleanWd);
+              localStorage.setItem("kademia_workout_data", JSON.stringify(cleanWd));
             }
-          }, 200);
-          return () => clearInterval(windowGoogleInterval);
+            if (remoteData.history) {
+              const cleanHist = deduplicateHistory(remoteData.history);
+              setHistory(cleanHist);
+              localStorage.setItem("kademia_history", JSON.stringify(cleanHist));
+            }
+            if (remoteData.profile) {
+              setProfile(remoteData.profile);
+              localStorage.setItem("kademia_profile", JSON.stringify(remoteData.profile));
+            }
+            if (remoteData.profileHistory) {
+              const cleanProfHist = deduplicateProfileHistory(remoteData.profileHistory);
+              setProfileHistory(cleanProfHist);
+              localStorage.setItem("kademia_profile_history", JSON.stringify(cleanProfHist));
+            }
+          } else {
+            // Document doesn't exist yet, seed initial local data to Firestore
+            await saveUserDataToFirestore(user.uid, {
+              workoutData: latestDataRef.current.workoutData,
+              history: latestDataRef.current.history,
+              profile: latestDataRef.current.profile,
+              profileHistory: latestDataRef.current.profileHistory
+            });
+          }
+        } catch (err) {
+          console.error("Erro ao sincronizar Firestore ao autenticar:", err);
         }
-      })
-      .catch((err) => console.error("Error loading Google GIS library:", err));
+      } else {
+        setGoogleSyncSettings({ connected: false });
+      }
+    });
+
+    return () => unsubscribeAuth();
   }, []);
 
-  // Get valid token (renewing silently if expired)
-  const getValidToken = async () => {
-    const currentSettings = latestDataRef.current.googleSyncSettings;
-    const clientId = GOOGLE_CLIENT_ID || import.meta.env.VITE_GOOGLE_CLIENT_ID || currentSettings.clientId;
-    if (!currentSettings.connected || !clientId) {
-      throw new Error("Google Drive não está conectado.");
-    }
+  // Real-time Firestore sync listener when logged in
+  useEffect(() => {
+    if (!googleSyncSettings.connected || !googleSyncSettings.uid) return;
 
-    if (currentSettings.token && Date.now() < currentSettings.tokenExpiry - 120000) {
-      return currentSettings.token;
-    }
+    const unsubscribeDoc = subscribeUserDataFromFirestore(googleSyncSettings.uid, (remoteData) => {
+      if (!remoteData) return;
 
-    console.log("Token expired or close to expiry. Attempting silent renewal...");
-    try {
-      const tokenResponse = await renewTokenSilently(currentSettings.email);
-      const newToken = tokenResponse.access_token;
-      const newExpiry = Date.now() + tokenResponse.expires_in * 1000;
+      if (remoteData.workoutData) {
+        setWorkoutData(sanitizeWorkoutData(remoteData.workoutData));
+      }
+      if (remoteData.history) {
+        setHistory(deduplicateHistory(remoteData.history));
+      }
+      if (remoteData.profile) {
+        setProfile(remoteData.profile);
+      }
+      if (remoteData.profileHistory) {
+        setProfileHistory(deduplicateProfileHistory(remoteData.profileHistory));
+      }
 
-      setGoogleSyncSettings(prev => ({
-        ...prev,
-        token: newToken,
-        tokenExpiry: newExpiry
-      }));
+      setSyncStatus("synced");
+      const timeStr = new Date().toLocaleString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+      setLastSyncTime(timeStr);
+    });
 
-      return newToken;
-    } catch (err) {
-      console.error("Silent token renewal failed:", err);
-      handleTokenExpired();
-      throw new Error("Sessão do Google Drive expirou. Por favor, acesse a aba Perfil e clique em Conectar novamente.");
-    }
-  };
+    return () => unsubscribeDoc();
+  }, [googleSyncSettings.connected, googleSyncSettings.uid]);
 
-  const handleTokenExpired = () => {
-    setGoogleSyncSettings(prev => ({
-      ...prev,
-      token: "",
-      tokenExpiry: 0
-    }));
-  };
-
-  // Wrapper para gerenciar status e logs das tarefas de sincronização no Google Drive
-  const runSyncTask = async (taskFn, isSilent = false) => {
-    const currentSettings = latestDataRef.current.googleSyncSettings;
-    if (!currentSettings.connected) return;
+  // Sync runner function for manual sync triggers
+  const runSyncTask = async (taskFn) => {
+    if (!googleSyncSettings.connected || !googleSyncSettings.uid) return;
     
     setSyncStatus("syncing");
     localStorage.setItem("kademia_sync_status", "syncing");
@@ -472,7 +415,7 @@ export default function App() {
       setLastSyncTime(timeStr);
       localStorage.setItem("kademia_last_sync_time", timeStr);
     } catch (err) {
-      console.error("Erro na sincronização:", err);
+      console.error("Erro na sincronização Firestore:", err);
       const isNetworkError = !navigator.onLine || 
                             err.message === "offline" || 
                             err.message.includes("Failed to fetch") || 
@@ -481,64 +424,14 @@ export default function App() {
       const nextStatus = isNetworkError ? "pending" : "error";
       setSyncStatus(nextStatus);
       localStorage.setItem("kademia_sync_status", nextStatus);
-      
-      if (!isSilent) {
-        throw err;
-      }
     }
   };
 
-  // Auto-sincronização bidirecional na abertura do app (montagem) ou ao retornar para o primeiro plano (foreground)
-  useEffect(() => {
-    let active = true;
-
-    const performAutoSyncOnOpen = async () => {
-      const currentSettings = latestDataRef.current.googleSyncSettings;
-      if (!currentSettings.connected || !currentSettings.spreadsheetId) return;
-      if (currentSettings.autoSync === false) return;
-
-      console.log("Iniciando auto-sincronização de abertura do app...");
-      try {
-        if (active) {
-          await handleSync();
-        }
-      } catch (err) {
-        console.error("Erro na auto-sincronização de abertura:", err);
-      }
-    };
-
-    // Executa 1.5s após abrir para dar tempo da biblioteca GIS carregar
-    const initialSyncTimeout = setTimeout(() => {
-      performAutoSyncOnOpen();
-    }, 1500);
-
-    // Também executa ao voltar para o app (ex: desbloquear celular ou reabrir aba)
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        performAutoSyncOnOpen();
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    return () => {
-      active = false;
-      clearTimeout(initialSyncTimeout);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [
-    googleSyncSettings.connected,
-    googleSyncSettings.spreadsheetId,
-    googleSyncSettings.autoSync
-  ]);
-
-  // Monitorar status online/offline e auto-sincronizar se voltar online com sync pendente
+  // Monitor online/offline status
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
-      const savedStatus = localStorage.getItem("kademia_sync_status");
-      if (savedStatus === "pending" && googleSyncSettings.connected) {
-        console.log("Conexão restabelecida! Sincronizando dados pendentes...");
+      if (googleSyncSettings.connected && googleSyncSettings.uid) {
         handleSync();
       }
     };
@@ -553,7 +446,7 @@ export default function App() {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
     };
-  }, [googleSyncSettings.connected]);
+  }, [googleSyncSettings.connected, googleSyncSettings.uid]);
 
   // Intercept PWA back button
   const navigationStateRef = useRef({ activeTab, activeWorkoutRoutine });
@@ -566,17 +459,15 @@ export default function App() {
       return;
     }
 
-    // Push dummy state to handle back navigation control
     window.history.pushState({ noBackExits: true }, "");
 
     let lastBackPress = 0;
     let toastTimeout = null;
 
-    const handlePopState = (event) => {
+    const handlePopState = () => {
       const currentTab = navigationStateRef.current.activeTab;
       const isWorkoutActive = navigationStateRef.current.activeWorkoutRoutine;
 
-      // 1. If active workout, verify cancel intent
       if (isWorkoutActive) {
         window.history.pushState({ noBackExits: true }, "");
         if (window.confirm("Deseja realmente cancelar este treino? Os dados digitados serão perdidos.")) {
@@ -586,14 +477,12 @@ export default function App() {
         return;
       }
 
-      // 2. If not on dashboard, return to dashboard
       if (currentTab !== "dashboard") {
         window.history.pushState({ noBackExits: true }, "");
         setActiveTab("dashboard");
         return;
       }
 
-      // 3. Double tap back button to exit
       const now = Date.now();
       if (now - lastBackPress < 2000) {
         window.history.go(-2);
@@ -617,34 +506,50 @@ export default function App() {
     };
   }, [hasEnteredApp, googleSyncSettings.connected]);
 
-  // Save state changes to localStorage
+  // Save state changes to localStorage and debounced sync to Firestore
   useEffect(() => {
     localStorage.setItem("kademia_workout_data", JSON.stringify(workoutData));
 
-    // Debounced routines auto-sync to Sheets if connected
-    if (googleSyncSettings.connected && googleSyncSettings.spreadsheetId) {
+    if (googleSyncSettings.connected && googleSyncSettings.uid) {
       const syncDebounce = setTimeout(() => {
-        runSyncTask(async () => {
-          const token = await getValidToken();
-          await syncRoutines(token, googleSyncSettings.spreadsheetId, workoutData, handleTokenExpired);
-          console.log("Rotinas sincronizadas com Google Sheets.");
-        }, true);
-      }, 2000);
+        saveUserDataToFirestore(googleSyncSettings.uid, { workoutData });
+      }, 1500);
       return () => clearTimeout(syncDebounce);
     }
-  }, [workoutData, googleSyncSettings.connected, googleSyncSettings.spreadsheetId]);
+  }, [workoutData, googleSyncSettings.connected, googleSyncSettings.uid]);
 
   useEffect(() => {
     localStorage.setItem("kademia_history", JSON.stringify(history));
-  }, [history]);
+
+    if (googleSyncSettings.connected && googleSyncSettings.uid) {
+      const syncDebounce = setTimeout(() => {
+        saveUserDataToFirestore(googleSyncSettings.uid, { history });
+      }, 1500);
+      return () => clearTimeout(syncDebounce);
+    }
+  }, [history, googleSyncSettings.connected, googleSyncSettings.uid]);
 
   useEffect(() => {
     localStorage.setItem("kademia_profile", JSON.stringify(profile));
-  }, [profile]);
+
+    if (googleSyncSettings.connected && googleSyncSettings.uid) {
+      const syncDebounce = setTimeout(() => {
+        saveUserDataToFirestore(googleSyncSettings.uid, { profile });
+      }, 1500);
+      return () => clearTimeout(syncDebounce);
+    }
+  }, [profile, googleSyncSettings.connected, googleSyncSettings.uid]);
 
   useEffect(() => {
     localStorage.setItem("kademia_profile_history", JSON.stringify(profileHistory));
-  }, [profileHistory]);
+
+    if (googleSyncSettings.connected && googleSyncSettings.uid) {
+      const syncDebounce = setTimeout(() => {
+        saveUserDataToFirestore(googleSyncSettings.uid, { profileHistory });
+      }, 1500);
+      return () => clearTimeout(syncDebounce);
+    }
+  }, [profileHistory, googleSyncSettings.connected, googleSyncSettings.uid]);
 
   useEffect(() => {
     localStorage.setItem("kademia_google_sync", JSON.stringify(googleSyncSettings));
@@ -659,7 +564,6 @@ export default function App() {
   }, [activeWorkoutRoutine]);
 
   const handleUpdateProfile = async (newProfile) => {
-    // Check if weight or height changed to add to history log
     const weightChanged = newProfile.weight !== profile.weight && newProfile.weight !== "";
     const heightChanged = newProfile.height !== profile.height && newProfile.height !== "";
 
@@ -676,44 +580,26 @@ export default function App() {
 
     setProfile(newProfile);
 
-    // Sync profile to Google Sheets if connected
-    if (googleSyncSettings.connected && googleSyncSettings.spreadsheetId) {
-      runSyncTask(async () => {
-        const token = await getValidToken();
-        await appendProfile(token, googleSyncSettings.spreadsheetId, newProfile, handleTokenExpired);
-        console.log("Medidas de perfil enviadas para o Google Sheets.");
-      }, true);
+    if (googleSyncSettings.connected && googleSyncSettings.uid) {
+      saveUserDataToFirestore(googleSyncSettings.uid, { 
+        profile: newProfile,
+        profileHistory: updatedHistory
+      });
     }
   };
 
   const handleUpdateGoogleSyncSettings = (newSettings) => {
-    // If we were disconnected and are now connecting, reset deletion watermarks
-    if (newSettings.connected && !googleSyncSettings.connected) {
-      localStorage.removeItem("kademia_profile_history_cleared_at");
-      localStorage.removeItem("kademia_workout_history_cleared_at");
-    }
     setGoogleSyncSettings(newSettings);
   };
 
   const handleClearProfileHistory = () => {
     setProfileHistory([]);
-    const clearedAt = new Date().toISOString();
-    localStorage.setItem("kademia_profile_history_cleared_at", clearedAt);
-
-    // If connected to Google Drive, clear the remote sheet immediately
-    if (googleSyncSettings.connected && googleSyncSettings.spreadsheetId) {
-      runSyncTask(async () => {
-        const token = await getValidToken();
-        await clearProfileHistorySheet(token, googleSyncSettings.spreadsheetId, handleTokenExpired);
-        console.log("Histórico de Medidas limpo no Google Drive.");
-      }, true);
+    if (googleSyncSettings.connected && googleSyncSettings.uid) {
+      saveUserDataToFirestore(googleSyncSettings.uid, { profileHistory: [] });
     }
   };
 
   const handleImportBackup = async (importedData) => {
-    localStorage.removeItem("kademia_profile_history_cleared_at");
-    localStorage.removeItem("kademia_workout_history_cleared_at");
-
     if (importedData.kademia_workout_data) {
       setWorkoutData(importedData.kademia_workout_data);
       localStorage.setItem("kademia_workout_data", JSON.stringify(importedData.kademia_workout_data));
@@ -735,10 +621,13 @@ export default function App() {
 
     alert("Backup importado com sucesso!");
 
-    if (googleSyncSettings.connected) {
-      setTimeout(() => {
-        handleSync();
-      }, 500);
+    if (googleSyncSettings.connected && googleSyncSettings.uid) {
+      saveUserDataToFirestore(googleSyncSettings.uid, {
+        workoutData: importedData.kademia_workout_data || workoutData,
+        history: importedData.kademia_history || history,
+        profile: importedData.kademia_profile || profile,
+        profileHistory: importedData.kademia_profile_history || profileHistory
+      });
     }
   };
 
@@ -753,36 +642,15 @@ export default function App() {
   };
 
   const handleSync = async () => {
+    if (!googleSyncSettings.connected || !googleSyncSettings.uid) return;
+
     await runSyncTask(async () => {
-      const token = await getValidToken();
-      const result = await syncBidirectional(
-        token,
-        googleSyncSettings.spreadsheetId,
-        latestDataRef.current.profileHistory,
-        latestDataRef.current.profile,
-        latestDataRef.current.workoutData,
-        latestDataRef.current.history,
-        handleTokenExpired
-      );
-      if (result) {
-        setHistory(result.history);
-        setProfileHistory(result.profileHistory);
-        
-        const currentSecondaryColor = profile?.secondaryColor || localStorage.getItem("kademia_secondary_color");
-        const mergedProfile = {
-          ...result.profile,
-          secondaryColor: currentSecondaryColor || result.profile?.secondaryColor || ""
-        };
-        setProfile(mergedProfile);
-
-        const cleanWorkoutData = sanitizeWorkoutData(result.workoutData);
-        setWorkoutData(cleanWorkoutData);
-
-        localStorage.setItem("kademia_history", JSON.stringify(result.history));
-        localStorage.setItem("kademia_profile_history", JSON.stringify(result.profileHistory));
-        localStorage.setItem("kademia_profile", JSON.stringify(mergedProfile));
-        localStorage.setItem("kademia_workout_data", JSON.stringify(cleanWorkoutData));
-      }
+      await saveUserDataToFirestore(googleSyncSettings.uid, {
+        workoutData: latestDataRef.current.workoutData,
+        history: latestDataRef.current.history,
+        profile: latestDataRef.current.profile,
+        profileHistory: latestDataRef.current.profileHistory
+      });
     });
   };
 
@@ -796,25 +664,22 @@ export default function App() {
   };
 
   const handleSaveWorkout = async (sessionData) => {
-    // Add new session to history
-    setHistory((prev) => [sessionData, ...prev]);
+    const updatedHistory = [sessionData, ...history];
+    setHistory(updatedHistory);
 
-    // Update loads in the workout data so they are pre-loaded next time
     const updatedRoutines = workoutData.routines.map((routine) => {
       if (routine.id !== sessionData.routineId) return routine;
       
       return {
         ...routine,
         exercises: routine.exercises.map((ex) => {
-          // Find matching exercise in finished session
           const finishedEx = sessionData.exercises.find((fe) => fe.name === ex.name);
           if (finishedEx && finishedEx.setsData) {
-            // Find max load or last set load
             const loads = finishedEx.setsData.map((s) => s.load).filter(Boolean);
             if (loads.length > 0) {
               return {
                 ...ex,
-                load: loads[loads.length - 1] // Save last set's load
+                load: loads[loads.length - 1]
               };
             }
           }
@@ -823,23 +688,20 @@ export default function App() {
       };
     });
 
-    handleUpdateWorkoutData((prev) => ({
-      ...prev,
-      routines: updatedRoutines
-    }));
+    const newWorkoutData = {
+      ...workoutData,
+      routines: updatedRoutines,
+      lastUpdated: new Date().toISOString()
+    };
 
+    setWorkoutData(newWorkoutData);
     setActiveWorkoutRoutine(null);
     setActiveTab("dashboard");
 
-    // Sync finished session to Google Drive if connected and autoSync is enabled
-    if (googleSyncSettings.connected && googleSyncSettings.autoSync !== false) {
-      runSyncTask(async () => {
-        console.log("Iniciando auto-sincronização do treino finalizado...");
-        const token = await getValidToken();
-        await appendWorkoutSession(token, googleSyncSettings.spreadsheetId, sessionData, handleTokenExpired);
-        console.log("Treino sincronizado com o Google Sheets!");
-      }, true).catch((err) => {
-        alert("Treino salvo localmente no aparelho, mas ocorreu um erro ao sincronizar com a planilha do Google: " + err.message);
+    if (googleSyncSettings.connected && googleSyncSettings.uid) {
+      saveUserDataToFirestore(googleSyncSettings.uid, {
+        history: updatedHistory,
+        workoutData: newWorkoutData
       });
     }
   };
@@ -847,22 +709,14 @@ export default function App() {
   const handleCancelWorkout = () => {
     if (window.confirm("Deseja realmente cancelar este treino? Os dados digitados serão perdidos.")) {
       setActiveWorkoutRoutine(null);
-      localStorage.removeItem("kademia_active_workout_state");
+      localStorage.removeItem("kademia_active_routine");
     }
   };
 
   const handleClearHistory = () => {
     setHistory([]);
-    const clearedAt = new Date().toISOString();
-    localStorage.setItem("kademia_workout_history_cleared_at", clearedAt);
-
-    // If connected to Google Drive, clear the remote sheet immediately
-    if (googleSyncSettings.connected && googleSyncSettings.spreadsheetId) {
-      runSyncTask(async () => {
-        const token = await getValidToken();
-        await clearWorkoutHistorySheet(token, googleSyncSettings.spreadsheetId, handleTokenExpired);
-        console.log("Histórico de Treinos limpo no Google Drive.");
-      }, true);
+    if (googleSyncSettings.connected && googleSyncSettings.uid) {
+      saveUserDataToFirestore(googleSyncSettings.uid, { history: [] });
     }
   };
 
@@ -917,7 +771,6 @@ export default function App() {
             onSync={handleSync}
             workoutData={workoutData}
             history={history}
-            onTriggerExpiredSession={handleTokenExpired}
             onImportBackup={handleImportBackup}
             onClearHistory={handleClearHistory}
             syncProps={syncProps}
@@ -936,7 +789,6 @@ export default function App() {
     }
   };
 
-  // If they are on the landing page, show it
   if (!hasEnteredApp) {
     return (
       <LandingPage
@@ -946,21 +798,17 @@ export default function App() {
     );
   }
 
-  // If they entered the app but are not logged into Google Drive, show the Login Screen
   if (hasEnteredApp && !googleSyncSettings.connected) {
     return (
       <LoginScreen
         theme={theme}
         onToggleTheme={toggleTheme}
-        googleSyncSettings={googleSyncSettings}
-        onUpdateGoogleSyncSettings={handleUpdateGoogleSyncSettings}
         onUpdateProfile={handleUpdateProfile}
         profile={profile}
       />
     );
   }
 
-  // If in an active workout session
   if (activeWorkoutRoutine) {
     return (
       <div className="app-container">
@@ -976,12 +824,10 @@ export default function App() {
 
   return (
     <div className="app-container animate-fade-in">
-      {/* Main View Area */}
       <main className="app-main-content">
         {renderTabContent()}
       </main>
 
-      {/* Bottom Nav Bar */}
       <nav className="bottom-nav">
         <button
           className={`nav-item ${activeTab === "dashboard" ? "active" : ""}`}
@@ -1016,14 +862,12 @@ export default function App() {
         </button>
       </nav>
 
-      {/* Floating Exit confirmation toast */}
       {showExitMessage && (
         <div className="exit-toast animate-fade-in">
           Pressione voltar novamente para sair
         </div>
       )}
 
-      {/* Bottom Nav Scoped Styles */}
       <style>{`
         .app-main-content {
           flex: 1;
@@ -1037,7 +881,7 @@ export default function App() {
           left: 16px;
           right: 16px;
           height: 66px;
-          max-width: 448px; /* 480px minus padding */
+          max-width: 448px;
           margin: 0 auto;
           display: flex;
           align-items: center;
@@ -1046,7 +890,6 @@ export default function App() {
           box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.08);
           z-index: 99;
           
-          /* Liquidglass Effect */
           background: var(--nav-bg);
           backdrop-filter: blur(20px) saturate(180%);
           -webkit-backdrop-filter: blur(20px) saturate(180%);
@@ -1080,7 +923,6 @@ export default function App() {
           color: var(--accent-purple);
         }
 
-        /* Exit Toast Styles */
         .exit-toast {
           position: fixed;
           bottom: 96px;
