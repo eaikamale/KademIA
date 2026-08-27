@@ -590,3 +590,367 @@ input[type=number] {
   color: var(--color-text-primary);
 }
 
+/* ==========================================
+   Settings & Profile Page Styles
+   ========================================== */
+
+.settings-container {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.settings-header {
+  margin-bottom: 4px;
+}
+
+.settings-page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 4px;
+}
+
+.settings-page-subtitle {
+  font-size: 0.88rem;
+  color: var(--color-text-secondary);
+}
+
+.settings-section {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.sub-section-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 12px;
+}
+
+.section-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Profile Form & Inputs */
+.profile-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 14px;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.input-group label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.input-group input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.input-group input:focus {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px var(--accent-purple-glow);
+}
+
+.label-with-reset {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.label-with-reset label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.submit-profile-btn {
+  width: 100%;
+}
+
+/* Evolution Chart & History Table */
+.evolution-chart-box {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.chart-empty-state {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+.svg-chart-container {
+  width: 100%;
+  overflow-x: auto;
+  background: var(--bg-secondary);
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid var(--border-color);
+}
+
+.weight-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.history-table-wrapper {
+  overflow-x: auto;
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.history-table th,
+.history-table td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.history-table th {
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  background: var(--bg-primary);
+}
+
+.history-table td {
+  color: var(--color-text-primary);
+}
+
+.table-more-info {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  text-align: center;
+  margin-top: 8px;
+}
+
+/* Status Badges */
+.badge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.badge-status.connected {
+  background: var(--accent-lime-glow);
+  color: var(--status-success);
+  border: 1px solid var(--status-success);
+}
+
+.badge-status.disconnected {
+  background: rgba(128, 134, 139, 0.1);
+  color: var(--color-text-muted);
+  border: 1px solid var(--border-color);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--status-success);
+}
+
+.status-dot.pulsing {
+  animation: pulseDot 2s infinite;
+}
+
+@keyframes pulseDot {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 var(--pulsing-shadow-start); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px var(--pulsing-shadow-end); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 var(--pulsing-shadow-end); }
+}
+
+.sync-banner {
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.sync-banner.error {
+  background: var(--status-error-glow);
+  border: 1px solid var(--status-error);
+  color: var(--status-error);
+}
+
+.sync-banner.success {
+  background: var(--accent-lime-glow);
+  border: 1px solid var(--status-success);
+  color: var(--status-success);
+}
+
+.sync-info-text {
+  font-size: 0.88rem;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+/* User Sync Avatar & Details */
+.user-profile-sync {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px;
+  border-radius: 14px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.user-sync-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--border-focus);
+}
+
+.user-sync-avatar-fallback {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--bg-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.user-sync-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.user-sync-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.user-sync-email {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  word-break: break-all;
+}
+
+.sync-actions-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.full-sync-btn,
+.start-sync-btn {
+  width: 100%;
+}
+
+.disconnect-btn {
+  width: 100%;
+}
+
+/* Theme Toggle & Danger Zone */
+.theme-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.92rem;
+  color: var(--color-text-primary);
+  font-weight: 500;
+}
+
+.theme-toggle-pill {
+  padding: 8px 16px;
+  border-radius: 20px;
+}
+
+.danger-zone-card {
+  border-color: rgba(225, 29, 72, 0.3);
+}
+
+.text-danger {
+  color: var(--status-error) !important;
+}
+
+.danger-actions-column {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.danger-btn {
+  width: 100%;
+  justify-content: center;
+}
+
+.spinner-animation {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+
