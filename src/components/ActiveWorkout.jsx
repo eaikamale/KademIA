@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { CheckIcon, ClockIcon, InfoIcon, PlayIcon } from "./Icons";
 import Timer from "./Timer";
-import { exerciseGifs } from "../data/exerciseGifs";
+import { exerciseGifs, getExerciseGif } from "../data/exerciseGifs";
 
 // Helper to check if exercise is cardio
 const isCardioEx = (name) => {
@@ -244,7 +244,7 @@ export default function ActiveWorkout({ routine, history, onSaveWorkout, onCance
                   <div className="ex-card-header">
                     <div className="ex-card-title-container">
                       <h4 className="ex-card-title">{ex.name}</h4>
-                      {exerciseGifs[ex.name] && (
+                      {getExerciseGif(ex.name) && (
                         <button
                           className={`btn-show-gif ${expandedGifExId === ex.id ? "active" : ""}`}
                           onClick={() => toggleGif(ex.id)}
@@ -291,10 +291,10 @@ export default function ActiveWorkout({ routine, history, onSaveWorkout, onCance
                     </div>
                   )}
 
-                  {expandedGifExId === ex.id && exerciseGifs[ex.name] && (
+                  {expandedGifExId === ex.id && getExerciseGif(ex.name) && (
                     <div className="exercise-gif-drawer animate-slide-down">
                       <img
-                        src={exerciseGifs[ex.name]}
+                        src={getExerciseGif(ex.name)}
                         alt={ex.name}
                         className="exercise-gif"
                         loading="lazy"
