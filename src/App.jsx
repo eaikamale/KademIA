@@ -139,18 +139,13 @@ function sanitizeWorkoutData(workoutData) {
 
 export default function App() {
   const [theme, setTheme] = useState(() => {
-    const saved = localStorage.getItem("kademia_theme") ||
-                  localStorage.getItem("gymrot_theme") ||
-                  localStorage.getItem("fittrack_theme");
+    const saved = localStorage.getItem("kademia_theme");
     return saved || "dark";
   });
 
   // App data states
   const [workoutData, setWorkoutData] = useState(() => {
     try {
-      localStorage.removeItem("gymrot_workout_data");
-      localStorage.removeItem("fittrack_workout_data");
-
       const saved = localStorage.getItem("kademia_workout_data");
       return saved ? JSON.parse(saved) : defaultWorkout;
     } catch (e) {
@@ -171,11 +166,22 @@ export default function App() {
       keys.forEach((k) => {
         const item = localStorage.getItem(k);
         if (item) {
-          const parsed = JSON.parse(item);
-          if (Array.isArray(parsed)) combined = [...combined, ...parsed];
+          try {
+            const parsed = JSON.parse(item);
+            if (Array.isArray(parsed)) combined = [...combined, ...parsed];
+          } catch (e) {}
         }
       });
-      return deduplicateHistory(combined);
+      const merged = deduplicateHistory(combined);
+      if (merged.length > 0) {
+        localStorage.setItem("kademia_history", JSON.stringify(merged));
+      }
+      localStorage.removeItem("gymrot_history");
+      localStorage.removeItem("fittrack_history");
+      localStorage.removeItem("gymwag_history");
+      localStorage.removeItem("gymrot_workout_data");
+      localStorage.removeItem("fittrack_workout_data");
+      return merged;
     } catch (e) {
       return [];
     }
@@ -217,11 +223,20 @@ export default function App() {
       keys.forEach((k) => {
         const item = localStorage.getItem(k);
         if (item) {
-          const parsed = JSON.parse(item);
-          if (Array.isArray(parsed)) combined = [...combined, ...parsed];
+          try {
+            const parsed = JSON.parse(item);
+            if (Array.isArray(parsed)) combined = [...combined, ...parsed];
+          } catch (e) {}
         }
       });
-      return deduplicateProfileHistory(combined);
+      const merged = deduplicateProfileHistory(combined);
+      if (merged.length > 0) {
+        localStorage.setItem("kademia_profile_history", JSON.stringify(merged));
+      }
+      localStorage.removeItem("gymrot_profile_history");
+      localStorage.removeItem("fittrack_profile_history");
+      localStorage.removeItem("gymwag_profile_history");
+      return merged;
     } catch (e) {
       return [];
     }
@@ -666,7 +681,7 @@ export default function App() {
     let newProfHist = profileHistory;
 
     // Workout Data
-    const rawWd = importedData.kademia_workout_data || importedData.gymrot_workout_data || importedData.workoutData;
+    const rawWd = importedData.kademia_workout_data || importedData.workoutData;
     if (rawWd) {
       newWd = sanitizeWorkoutData(rawWd);
       setWorkoutData(newWd);
@@ -674,7 +689,7 @@ export default function App() {
     }
 
     // History
-    const rawHist = importedData.kademia_history || importedData.gymrot_history || importedData.gymwag_history || importedData.history;
+    const rawHist = importedData.kademia_history || importedData.history;
     if (rawHist && Array.isArray(rawHist)) {
       newHist = mergeHistory(history, rawHist);
       setHistory(newHist);
@@ -682,7 +697,7 @@ export default function App() {
     }
 
     // Profile
-    const rawProf = importedData.kademia_profile || importedData.gymrot_profile || importedData.profile;
+    const rawProf = importedData.kademia_profile || importedData.profile;
     if (rawProf) {
       newProf = { ...profile, ...rawProf };
       setProfile(newProf);
@@ -690,7 +705,7 @@ export default function App() {
     }
 
     // Profile History (Weight)
-    const rawProfHist = importedData.kademia_profile_history || importedData.gymrot_profile_history || importedData.profileHistory || importedData.profile_history;
+    const rawProfHist = importedData.kademia_profile_history || importedData.profileHistory;
     if (rawProfHist && Array.isArray(rawProfHist)) {
       newProfHist = mergeProfileHistory(profileHistory, rawProfHist);
       setProfileHistory(newProfHist);
