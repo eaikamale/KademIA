@@ -533,11 +533,11 @@ export default function Settings({
           <button type="button" className="btn btn-secondary theme-toggle-pill" onClick={onToggleTheme}>
             {theme === "dark" ? (
               <>
-                <MoonIcon size={18} /> Escuro
+                <SunIcon size={18} /> Modo Claro
               </>
             ) : (
               <>
-                <SunIcon size={18} /> Claro
+                <MoonIcon size={18} /> Modo Escuro
               </>
             )}
           </button>

@@ -3,6 +3,40 @@ import { CheckIcon, ClockIcon, InfoIcon, PlayIcon } from "./Icons";
 import Timer from "./Timer";
 import { exerciseGifs, getExerciseGif } from "../data/exerciseGifs";
 
+// Componente de mídias de exercício com animação leve de 2 quadros (loop a cada 750ms)
+function ExerciseGifViewer({ name }) {
+  const baseGif = getExerciseGif(name);
+  const [frame, setFrame] = useState(0);
+
+  useEffect(() => {
+    if (!baseGif) return;
+    const img0 = new Image();
+    img0.src = baseGif;
+    const img1 = new Image();
+    img1.src = baseGif.replace("_0.jpg", "_1.jpg");
+
+    const timer = setInterval(() => {
+      setFrame((prev) => (prev === 0 ? 1 : 0));
+    }, 750);
+    return () => clearInterval(timer);
+  }, [baseGif]);
+
+  if (!baseGif) return null;
+
+  const currentSrc = frame === 1 ? baseGif.replace("_0.jpg", "_1.jpg") : baseGif;
+
+  return (
+    <div className="exercise-gif-drawer animate-slide-down">
+      <img
+        src={currentSrc}
+        alt={name}
+        className="exercise-gif"
+        loading="eager"
+      />
+    </div>
+  );
+}
+
 // Helper to check if exercise is cardio
 const isCardioEx = (name) => {
   return /cardio|corrida|trote|esteira|caminhada|bike|bicicleta|elíptico|running|spinning/i.test(name);
@@ -291,15 +325,8 @@ export default function ActiveWorkout({ routine, history, onSaveWorkout, onCance
                     </div>
                   )}
 
-                  {expandedGifExId === ex.id && getExerciseGif(ex.name) && (
-                    <div className="exercise-gif-drawer animate-slide-down">
-                      <img
-                        src={getExerciseGif(ex.name)}
-                        alt={ex.name}
-                        className="exercise-gif"
-                        loading="lazy"
-                      />
-                    </div>
+                  {expandedGifExId === ex.id && (
+                    <ExerciseGifViewer name={ex.name} />
                   )}
 
                   {/* Grid Headers (Adaptable for Cardio vs Strength) */}
@@ -913,14 +940,13 @@ export default function ActiveWorkout({ routine, history, onSaveWorkout, onCance
 
         .exercise-gif {
           max-width: 100%;
-          max-height: 180px;
+          max-height: 220px;
           border-radius: 8px;
           object-fit: contain;
-          mix-blend-mode: multiply;
         }
 
         .dark-theme .exercise-gif {
-          filter: invert(0.9) hue-rotate(180deg);
+          filter: none;
           mix-blend-mode: normal;
         }
 
