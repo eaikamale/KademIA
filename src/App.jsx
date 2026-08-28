@@ -148,11 +148,8 @@ export default function App() {
   // App data states
   const [workoutData, setWorkoutData] = useState(() => {
     try {
-      // Clear old legacy keys from previous app names to prevent stale routines
       localStorage.removeItem("gymrot_workout_data");
       localStorage.removeItem("fittrack_workout_data");
-      localStorage.removeItem("gymrot_history");
-      localStorage.removeItem("fittrack_history");
 
       const saved = localStorage.getItem("kademia_workout_data");
       return saved ? JSON.parse(saved) : defaultWorkout;
@@ -163,11 +160,22 @@ export default function App() {
 
   const [history, setHistory] = useState(() => {
     try {
-      const saved = localStorage.getItem("kademia_history") ||
-                    localStorage.getItem("gymrot_history") ||
-                    localStorage.getItem("fittrack_history");
-      const list = saved ? JSON.parse(saved) : [];
-      return deduplicateHistory(list);
+      const keys = [
+        "kademia_history",
+        "gymrot_history",
+        "fittrack_history",
+        "gymwag_history",
+        "history"
+      ];
+      let combined = [];
+      keys.forEach((k) => {
+        const item = localStorage.getItem(k);
+        if (item) {
+          const parsed = JSON.parse(item);
+          if (Array.isArray(parsed)) combined = [...combined, ...parsed];
+        }
+      });
+      return deduplicateHistory(combined);
     } catch (e) {
       return [];
     }
@@ -198,8 +206,22 @@ export default function App() {
 
   const [profileHistory, setProfileHistory] = useState(() => {
     try {
-      const saved = localStorage.getItem("kademia_profile_history");
-      return saved ? JSON.parse(saved) : [];
+      const keys = [
+        "kademia_profile_history",
+        "gymrot_profile_history",
+        "fittrack_profile_history",
+        "gymwag_profile_history",
+        "profile_history"
+      ];
+      let combined = [];
+      keys.forEach((k) => {
+        const item = localStorage.getItem(k);
+        if (item) {
+          const parsed = JSON.parse(item);
+          if (Array.isArray(parsed)) combined = [...combined, ...parsed];
+        }
+      });
+      return deduplicateProfileHistory(combined);
     } catch (e) {
       return [];
     }
@@ -638,33 +660,51 @@ export default function App() {
   };
 
   const handleImportBackup = async (importedData) => {
-    if (importedData.kademia_workout_data) {
-      setWorkoutData(importedData.kademia_workout_data);
-      localStorage.setItem("kademia_workout_data", JSON.stringify(importedData.kademia_workout_data));
-    }
-    if (importedData.kademia_history) {
-      const cleanHistory = deduplicateHistory(importedData.kademia_history);
-      setHistory(cleanHistory);
-      localStorage.setItem("kademia_history", JSON.stringify(cleanHistory));
-    }
-    if (importedData.kademia_profile) {
-      setProfile(importedData.kademia_profile);
-      localStorage.setItem("kademia_profile", JSON.stringify(importedData.kademia_profile));
-    }
-    if (importedData.kademia_profile_history) {
-      const cleanProfileHistory = deduplicateProfileHistory(importedData.kademia_profile_history);
-      setProfileHistory(cleanProfileHistory);
-      localStorage.setItem("kademia_profile_history", JSON.stringify(cleanProfileHistory));
+    let newWd = workoutData;
+    let newHist = history;
+    let newProf = profile;
+    let newProfHist = profileHistory;
+
+    // Workout Data
+    const rawWd = importedData.kademia_workout_data || importedData.gymrot_workout_data || importedData.workoutData;
+    if (rawWd) {
+      newWd = sanitizeWorkoutData(rawWd);
+      setWorkoutData(newWd);
+      localStorage.setItem("kademia_workout_data", JSON.stringify(newWd));
     }
 
-    alert("Backup importado com sucesso!");
+    // History
+    const rawHist = importedData.kademia_history || importedData.gymrot_history || importedData.gymwag_history || importedData.history;
+    if (rawHist && Array.isArray(rawHist)) {
+      newHist = mergeHistory(history, rawHist);
+      setHistory(newHist);
+      localStorage.setItem("kademia_history", JSON.stringify(newHist));
+    }
+
+    // Profile
+    const rawProf = importedData.kademia_profile || importedData.gymrot_profile || importedData.profile;
+    if (rawProf) {
+      newProf = { ...profile, ...rawProf };
+      setProfile(newProf);
+      localStorage.setItem("kademia_profile", JSON.stringify(newProf));
+    }
+
+    // Profile History (Weight)
+    const rawProfHist = importedData.kademia_profile_history || importedData.gymrot_profile_history || importedData.profileHistory || importedData.profile_history;
+    if (rawProfHist && Array.isArray(rawProfHist)) {
+      newProfHist = mergeProfileHistory(profileHistory, rawProfHist);
+      setProfileHistory(newProfHist);
+      localStorage.setItem("kademia_profile_history", JSON.stringify(newProfHist));
+    }
+
+    alert(`Backup importado e mesclado com sucesso! (${newHist.length} treinos no histórico e ${newProfHist.length} pesagens).`);
 
     if (googleSyncSettings.connected && googleSyncSettings.uid) {
-      saveUserDataToFirestore(googleSyncSettings.uid, {
-        workoutData: importedData.kademia_workout_data || workoutData,
-        history: importedData.kademia_history || history,
-        profile: importedData.kademia_profile || profile,
-        profileHistory: importedData.kademia_profile_history || profileHistory
+      await saveUserDataToFirestore(googleSyncSettings.uid, {
+        workoutData: newWd,
+        history: newHist,
+        profile: newProf,
+        profileHistory: newProfHist
       });
     }
   };
