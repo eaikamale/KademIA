@@ -28,6 +28,7 @@ export default function Settings({
   onImportBackup,
   onClearHistory,
   onResetDefaultWorkout,
+  onForcePush,
   syncProps
 }) {
   const defaultGreen = theme === "dark" ? "#ADFF2F" : "#008A47";
@@ -511,6 +512,16 @@ export default function Settings({
                 <SyncIcon size={18} className={isSyncingAll ? "spinner-animation" : ""} />
                 {isSyncingAll ? "Sincronizando..." : "Sincronizar Agora com a Nuvem"}
               </button>
+
+              {onForcePush && (
+                <button 
+                  type="button" 
+                  className="btn btn-secondary full-sync-btn"
+                  onClick={onForcePush}
+                >
+                  <UploadIcon size={18} /> Enviar Dados Deste Aparelho para a Nuvem
+                </button>
+              )}
 
               <button 
                 type="button" 

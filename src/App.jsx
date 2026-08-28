@@ -726,6 +726,28 @@ export default function App() {
     });
   };
 
+  const handleForcePushToCloud = async () => {
+    if (!googleSyncSettings.connected || !googleSyncSettings.uid) {
+      alert("Sua conta do Google não está conectada neste aparelho.");
+      return;
+    }
+
+    const histLen = (history || []).length;
+    const profHistLen = (profileHistory || []).length;
+
+    if (window.confirm(`Deseja ENVIAR TODOS OS DADOS deste aparelho (${histLen} treinos salvos e ${profHistLen} pesagens) para a nuvem na conta (${googleSyncSettings.email})?`)) {
+      await runSyncTask(async () => {
+        await saveUserDataToFirestore(googleSyncSettings.uid, {
+          workoutData: latestDataRef.current.workoutData,
+          history: latestDataRef.current.history,
+          profile: latestDataRef.current.profile,
+          profileHistory: latestDataRef.current.profileHistory
+        });
+      });
+      alert(`Sucesso! Os ${histLen} treinos e ${profHistLen} pesagens deste aparelho foram gravados na nuvem para a conta ${googleSyncSettings.email}. No seu outro aparelho, abra a tela Perfil e clique em 'Sincronizar Agora com a Nuvem'.`);
+    }
+  };
+
   const handleEnterApp = () => {
     setHasEnteredApp(true);
     sessionStorage.setItem("kademia_session_entered", "true");
@@ -862,6 +884,7 @@ export default function App() {
             onImportBackup={handleImportBackup}
             onClearHistory={handleClearHistory}
             onResetDefaultWorkout={handleResetDefaultWorkout}
+            onForcePush={handleForcePushToCloud}
             syncProps={syncProps}
           />
         );
