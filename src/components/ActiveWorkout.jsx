@@ -4,36 +4,94 @@ import Timer from "./Timer";
 import { exerciseGifs, getExerciseGif } from "../data/exerciseGifs";
 import WorkoutReceiptModal from "./WorkoutReceiptModal";
 
-// Componente de mídias de exercício com animação leve de 2 quadros (loop a cada 750ms)
+// Componente de mídias de exercício com suporte a GIF/Vídeo nativo e transição fluida suave (CSS Crossfade)
 function ExerciseGifViewer({ name }) {
-  const baseGif = getExerciseGif(name);
-  const [frame, setFrame] = useState(0);
+  const mediaObj = getExerciseGif(name);
+  const [activeFrame, setActiveFrame] = useState(0);
+
+  const isAnimatedFile = typeof mediaObj === "string" && (
+    mediaObj.endsWith(".gif") || mediaObj.endsWith(".webp") || mediaObj.endsWith(".mp4")
+  );
 
   useEffect(() => {
-    if (!baseGif) return;
-    const img0 = new Image();
-    img0.src = baseGif;
-    const img1 = new Image();
-    img1.src = baseGif.replace("_0.jpg", "_1.jpg");
+    if (!mediaObj || isAnimatedFile) return;
 
     const timer = setInterval(() => {
-      setFrame((prev) => (prev === 0 ? 1 : 0));
-    }, 750);
+      setActiveFrame((prev) => (prev === 0 ? 1 : 0));
+    }, 1100);
+
     return () => clearInterval(timer);
-  }, [baseGif]);
+  }, [mediaObj, isAnimatedFile]);
 
-  if (!baseGif) return null;
+  if (!mediaObj) return null;
 
-  const currentSrc = frame === 1 ? baseGif.replace("_0.jpg", "_1.jpg") : baseGif;
+  if (isAnimatedFile) {
+    if (mediaObj.endsWith(".mp4")) {
+      return (
+        <div className="exercise-gif-drawer animate-slide-down">
+          <video
+            src={mediaObj}
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="exercise-gif"
+          />
+        </div>
+      );
+    }
+
+    return (
+      <div className="exercise-gif-drawer animate-slide-down">
+        <img
+          src={mediaObj}
+          alt={name}
+          className="exercise-gif"
+          loading="eager"
+        />
+      </div>
+    );
+  }
+
+  const src0 = typeof mediaObj === "string" ? mediaObj : mediaObj.static || mediaObj.src0;
+  const src1 = src0 ? src0.replace("_0.jpg", "_1.jpg") : "";
 
   return (
-    <div className="exercise-gif-drawer animate-slide-down">
+    <div className="exercise-gif-drawer animate-slide-down" style={{ position: "relative", minHeight: "220px", display: "flex", justifyContent: "center", alignItems: "center" }}>
       <img
-        src={currentSrc}
-        alt={name}
+        src={src0}
+        alt={`${name} - Posição 1`}
         className="exercise-gif"
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "contain",
+          transition: "opacity 1000ms cubic-bezier(0.4, 0, 0.2, 1)",
+          opacity: activeFrame === 0 ? 1 : 0
+        }}
         loading="eager"
       />
+      {src1 && (
+        <img
+          src={src1}
+          alt={`${name} - Posição 2`}
+          className="exercise-gif"
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "contain",
+            transition: "opacity 1000ms cubic-bezier(0.4, 0, 0.2, 1)",
+            opacity: activeFrame === 1 ? 1 : 0
+          }}
+          loading="eager"
+        />
+      )}
     </div>
   );
 }
