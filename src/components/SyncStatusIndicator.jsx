@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import { CloudIcon, SyncIcon } from "./Icons";
 
 export default function SyncStatusIndicator({ status, lastSync, isOnline, onSync }) {
-  return null;
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
 
@@ -30,26 +29,26 @@ export default function SyncStatusIndicator({ status, lastSync, isOnline, onSync
         return {
           label: "Sincronizando...",
           iconClass: "cloud-syncing",
-          desc: "Atualizando dados com o Google Drive."
+          desc: "Atualizando dados com a nuvem Firebase."
         };
       case "pending":
         return {
           label: "Envio Pendente",
           iconClass: "cloud-pending",
-          desc: "Dados salvos localmente. Aguardando conexão ou próxima sincronização."
+          desc: "Dados salvos localmente. Aguardando próxima sincronização."
         };
       case "error":
         return {
           label: "Erro no Sync",
           iconClass: "cloud-error",
-          desc: "Falha na conexão com o Drive. Clique em sincronizar para tentar novamente."
+          desc: "Falha na conexão com o Firebase. Clique em sincronizar para tentar novamente."
         };
       case "synced":
       default:
         return {
           label: "Nuvem Atualizada",
           iconClass: "cloud-synced",
-          desc: "Todos os seus dados estão salvos no Google Drive."
+          desc: "Todos os seus dados estão salvos na nuvem Firebase."
         };
     }
   };

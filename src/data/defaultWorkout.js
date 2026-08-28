@@ -228,12 +228,12 @@ export const defaultWorkout = {
         },
         {
           id: "c8",
-          name: "Panturrilha em Pé",
+          name: "Panturrilha Sentado (Gêmeos Sentado)",
           sets: 4,
           reps: "12-15",
           rest: 45,
           load: "",
-          observations: "Joelhos estendidos para foco no gastrocnêmio."
+          observations: "Joelhos flexionados a 90° para isolamento do sóleo. Segurar 1-2s no pico de contração."
         },
         {
           id: "c9",
