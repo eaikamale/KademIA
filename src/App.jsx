@@ -191,10 +191,12 @@ export default function App() {
 
   // Apply custom accent color dynamically on boot and theme toggle
   const defaultGreen = theme === "dark" ? "#ADFF2F" : "#008A47";
-  const activeUserColor = profile?.secondaryColor || localStorage.getItem("kademia_secondary_color") || defaultGreen;
+  const rawColor = profile?.secondaryColor || localStorage.getItem("kademia_secondary_color") || defaultGreen;
+  const isDefaultGreen = !rawColor || rawColor.toLowerCase() === "#adff2f" || rawColor.toLowerCase() === "#008a47";
+  const activeUserColor = isDefaultGreen ? defaultGreen : rawColor;
   
   useEffect(() => {
-    applyAccentColorToDOM(activeUserColor);
+    applyAccentColorToDOM(activeUserColor, theme);
   }, [activeUserColor, theme]);
 
   // Cloud sync state (Firebase Auth / Firestore)
@@ -265,7 +267,20 @@ export default function App() {
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+    setTheme((prev) => {
+      const nextTheme = prev === "dark" ? "light" : "dark";
+      const nextDefault = nextTheme === "dark" ? "#ADFF2F" : "#008A47";
+      const rawColor = profile?.secondaryColor || localStorage.getItem("kademia_secondary_color");
+      const isDefaultGreen = !rawColor || rawColor.toLowerCase() === "#adff2f" || rawColor.toLowerCase() === "#008a47";
+
+      if (isDefaultGreen) {
+        setProfile((prevProf) => ({ ...prevProf, secondaryColor: nextDefault }));
+        try {
+          localStorage.setItem("kademia_secondary_color", nextDefault);
+        } catch (e) {}
+      }
+      return nextTheme;
+    });
   };
 
   // Listen to beforeinstallprompt event

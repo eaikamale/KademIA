@@ -30,13 +30,15 @@ export default function Settings({
   syncProps
 }) {
   const defaultGreen = theme === "dark" ? "#ADFF2F" : "#008A47";
+  const rawColor = profile.secondaryColor || defaultGreen;
+  const isDefaultGreen = !profile.secondaryColor || rawColor.toLowerCase() === "#adff2f" || rawColor.toLowerCase() === "#008a47";
 
   // Local profile inputs
   const [name, setName] = useState(profile.name || "");
   const [weight, setWeight] = useState(profile.weight || "");
   const [height, setHeight] = useState(profile.height || "");
   const [secondaryColor, setSecondaryColor] = useState(
-    profile.secondaryColor || defaultGreen
+    isDefaultGreen ? defaultGreen : rawColor
   );
   
   // UI states
@@ -50,8 +52,10 @@ export default function Settings({
     setName(profile.name || "");
     setWeight(profile.weight || "");
     setHeight(profile.height || "");
-    setSecondaryColor(profile.secondaryColor || defaultGreen);
-  }, [profile, defaultGreen]);
+    const raw = profile.secondaryColor || defaultGreen;
+    const isDefault = !profile.secondaryColor || raw.toLowerCase() === "#adff2f" || raw.toLowerCase() === "#008a47";
+    setSecondaryColor(isDefault ? defaultGreen : raw);
+  }, [profile, theme, defaultGreen]);
 
   const handleSelectColor = (hex) => {
     setSecondaryColor(hex);
@@ -286,25 +290,28 @@ export default function Settings({
                 { name: "Roxo Tech", hex: "#8B5CF6" },
                 { name: "Laranja Energia", hex: "#F97316" },
                 { name: "Rosa Vibrante", hex: "#EC4899" }
-              ].map((swatch) => (
-                <button
-                  key={swatch.hex}
-                  type="button"
-                  className={`color-swatch-btn ${secondaryColor === swatch.hex ? "active" : ""}`}
-                  style={{ backgroundColor: swatch.hex }}
-                  onClick={() => handleSelectColor(swatch.hex)}
-                  title={swatch.name}
-                >
-                  {secondaryColor === swatch.hex && (
-                    <CheckIcon size={16} className="color-swatch-check" />
-                  )}
-                </button>
-              ))}
+              ].map((swatch) => {
+                const isActive = secondaryColor.toLowerCase() === swatch.hex.toLowerCase() || (swatch.name === "Verde Esportivo" && isDefaultGreen);
+                return (
+                  <button
+                    key={swatch.hex}
+                    type="button"
+                    className={`color-swatch-btn ${isActive ? "active" : ""}`}
+                    style={{ backgroundColor: swatch.hex }}
+                    onClick={() => handleSelectColor(swatch.hex)}
+                    title={swatch.name}
+                  >
+                    {isActive && (
+                      <CheckIcon size={16} className="color-swatch-check" />
+                    )}
+                  </button>
+                );
+              })}
 
               {/* Custom Color Input Circle */}
               {(() => {
-                const presetHexes = [defaultGreen, "#3B82F6", "#8B5CF6", "#F97316", "#EC4899"];
-                const isCustomActive = !presetHexes.includes(secondaryColor);
+                const presetHexes = [defaultGreen, "#ADFF2F", "#008A47", "#3B82F6", "#8B5CF6", "#F97316", "#EC4899"];
+                const isCustomActive = !isDefaultGreen && !presetHexes.map(h => h.toLowerCase()).includes(secondaryColor.toLowerCase());
                 return (
                   <div 
                     className={`custom-color-wrapper ${isCustomActive ? "active" : ""}`}
