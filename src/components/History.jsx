@@ -22,11 +22,12 @@ const MONTHS = [
 
 const WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
-export default function History({ history, onClearHistory, syncProps, profile }) {
+export default function History({ history, onClearHistory, onDeleteWorkout, syncProps, profile }) {
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [selectedReceiptSession, setSelectedReceiptSession] = useState(null);
+  const [sessionToDelete, setSessionToDelete] = useState(null);
 
   // Calendar calculations
   const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
@@ -241,9 +242,23 @@ export default function History({ history, onClearHistory, syncProps, profile })
                             {session.routineName.replace("Treino " + session.routineId + " - ", "")}
                           </h4>
                         </div>
-                        <span className="hist-time-tag">
-                          {formatSessionTime(session.date)}
-                        </span>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <span className="hist-time-tag">
+                            {formatSessionTime(session.date)}
+                          </span>
+                          <button
+                            type="button"
+                            className="btn-delete-workout-discreet"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSessionToDelete(session);
+                            }}
+                            title="Apagar este treino"
+                            aria-label="Apagar este treino"
+                          >
+                            <TrashIcon size={14} />
+                          </button>
+                        </div>
                       </div>
 
                       <div className="hist-meta-summary">
@@ -674,7 +689,67 @@ export default function History({ history, onClearHistory, syncProps, profile })
           color: var(--status-error);
           font-weight: bold;
         }
+
+        .btn-delete-workout-discreet {
+          background: transparent;
+          border: none;
+          color: var(--color-text-muted);
+          opacity: 0.35;
+          padding: 4px;
+          border-radius: 6px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .btn-delete-workout-discreet:hover {
+          opacity: 1;
+          color: var(--status-error);
+          background: rgba(225, 29, 72, 0.12);
+        }
       `}</style>
+
+      {/* Confirmation Modal for Deleting Single Workout */}
+      {sessionToDelete && (
+        <div className="modal-overlay animate-fade-in" style={{ zIndex: 12000 }}>
+          <div className="modal-content glass animate-slide-up" style={{ maxWidth: "380px" }}>
+            <h3 className="modal-title text-danger" style={{ color: "var(--status-error)", marginBottom: "8px" }}>
+              Apagar Registro de Treino?
+            </h3>
+            <p style={{ fontSize: "0.9rem", color: "var(--color-text-secondary)", lineHeight: "1.4", marginBottom: "14px" }}>
+              Você está prestes a apagar o registro do treino <strong>{sessionToDelete.routineName}</strong> realizado em <strong>{new Date(sessionToDelete.date).toLocaleDateString("pt-BR")}</strong>.
+            </p>
+            <div style={{ background: "rgba(225, 29, 72, 0.1)", border: "1px solid rgba(225, 29, 72, 0.3)", borderRadius: "8px", padding: "10px 12px", marginBottom: "20px" }}>
+              <span style={{ fontSize: "0.82rem", color: "var(--status-error)", fontWeight: "600" }}>
+                ⚠️ Atenção: Ao clicar em apagar, este dado será perdido permanentemente e não há mais volta.
+              </span>
+            </div>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button 
+                type="button" 
+                className="btn btn-secondary" 
+                onClick={() => setSessionToDelete(null)}
+                style={{ flex: 1, justifyContent: "center" }}
+              >
+                Cancelar
+              </button>
+              <button 
+                type="button" 
+                className="btn btn-danger" 
+                onClick={() => {
+                  if (onDeleteWorkout) onDeleteWorkout(sessionToDelete);
+                  setSessionToDelete(null);
+                }}
+                style={{ flex: 1, justifyContent: "center" }}
+              >
+                Apagar Treino
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {selectedReceiptSession && (
         <WorkoutReceiptModal

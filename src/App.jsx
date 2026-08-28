@@ -737,6 +737,20 @@ export default function App() {
     }
   };
 
+  const handleDeleteSingleWorkout = (sessionToDelete) => {
+    const updated = history.filter((s) => {
+      if (sessionToDelete.id && s.id) {
+        return s.id !== sessionToDelete.id;
+      }
+      return s.date !== sessionToDelete.date;
+    });
+    setHistory(updated);
+    localStorage.setItem("kademia_history", JSON.stringify(updated));
+    if (googleSyncSettings.connected && googleSyncSettings.uid) {
+      saveUserDataToFirestore(googleSyncSettings.uid, { history: updated });
+    }
+  };
+
   // Render navigation tab contents
   const renderTabContent = () => {
     const syncProps = googleSyncSettings.connected ? {
@@ -771,6 +785,7 @@ export default function App() {
           <History
             history={history}
             onClearHistory={handleClearHistory}
+            onDeleteWorkout={handleDeleteSingleWorkout}
             syncProps={syncProps}
             profile={profile}
           />
