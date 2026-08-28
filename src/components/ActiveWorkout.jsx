@@ -2,27 +2,15 @@ import React, { useState, useEffect } from "react";
 import { CheckIcon, ClockIcon, InfoIcon, PlayIcon } from "./Icons";
 import Timer from "./Timer";
 import { exerciseGifs, getExerciseGif } from "../data/exerciseGifs";
-import { getMuscleWikiVideoUrl } from "../services/musclewiki";
 import WorkoutReceiptModal from "./WorkoutReceiptModal";
 
-// Componente de mídias de exercício com suporte a MuscleWiki (Pessoas Reais em HD), Vídeo nativo e GIFs animados
+// Componente de mídias de exercício com suporte a GIF/Vídeo nativo e transição fluida suave (CSS Crossfade)
 function ExerciseGifViewer({ name }) {
-  const localMedia = getExerciseGif(name);
-  const [mwVideo, setMwVideo] = useState(null);
+  const mediaObj = getExerciseGif(name);
   const [activeFrame, setActiveFrame] = useState(0);
 
-  useEffect(() => {
-    let isMounted = true;
-    getMuscleWikiVideoUrl(name).then((url) => {
-      if (isMounted && url) setMwVideo(url);
-    });
-    return () => { isMounted = false; };
-  }, [name]);
-
-  const mediaObj = mwVideo || localMedia;
-
   const isAnimatedFile = typeof mediaObj === "string" && (
-    mediaObj.endsWith(".gif") || mediaObj.endsWith(".webp") || mediaObj.endsWith(".mp4") || mediaObj.includes("musclewiki.com")
+    mediaObj.endsWith(".gif") || mediaObj.endsWith(".webp") || mediaObj.endsWith(".mp4")
   );
 
   useEffect(() => {
@@ -38,7 +26,7 @@ function ExerciseGifViewer({ name }) {
   if (!mediaObj) return null;
 
   if (isAnimatedFile) {
-    if (mediaObj.endsWith(".mp4") || mediaObj.includes(".mp4") || mediaObj.includes("musclewiki.com")) {
+    if (mediaObj.endsWith(".mp4")) {
       return (
         <div className="exercise-gif-drawer animate-slide-down">
           <video
@@ -1024,7 +1012,7 @@ export default function ActiveWorkout({ routine, history, onSaveWorkout, onCance
         }
 
         .dark-theme .exercise-gif-drawer {
-          background: rgba(255, 255, 255, 0.01);
+          background: rgba(255, 255, 255, 0.02);
         }
 
         .exercise-gif {
@@ -1032,11 +1020,11 @@ export default function ActiveWorkout({ routine, history, onSaveWorkout, onCance
           max-height: 220px;
           border-radius: 8px;
           object-fit: contain;
+          transition: filter 0.3s ease;
         }
 
         .dark-theme .exercise-gif {
-          filter: none;
-          mix-blend-mode: normal;
+          filter: invert(0.92) hue-rotate(180deg);
         }
 
         @keyframes slideDown {
