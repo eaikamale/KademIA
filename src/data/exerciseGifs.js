@@ -78,9 +78,9 @@ export const exerciseGifs = {
   "Rosca Martelo Halter": BASE_GIF_PATH + "Alternate_Hammer_Curl.gif",
 
   // Outros
-  "Cardio Moderado (Esteira)": BASE_GIF_PATH + "Running_Treadmill.gif",
-  "Cardio (Corrida/Trote)": BASE_GIF_PATH + "Running_Treadmill.gif",
-  "Cardio (Corrida/Elíptico)": BASE_GIF_PATH + "Running_Treadmill.gif",
+  "Cardio Moderado (Esteira)": BASE_GIF_PATH + "Running_Treadmill_Flat.gif",
+  "Cardio (Corrida/Trote)": BASE_GIF_PATH + "Running_Treadmill_Flat.gif",
+  "Cardio (Corrida/Elíptico)": BASE_GIF_PATH + "Running_Treadmill_Flat.gif",
   "Agachamento Sumô": BASE_GIF_PATH + "Barbell_Full_Squat.gif",
   "Elevação de Quadril Máquina (Hip Thrust)": BASE_GIF_PATH + "Barbell_Full_Squat.gif",
   "Abdominal Infra / Elevação Pernas": BASE_GIF_PATH + "Ab_Crunch_Machine.gif"
