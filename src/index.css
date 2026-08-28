@@ -953,4 +953,79 @@ input[type=number] {
   to { transform: rotate(360deg); }
 }
 
+/* IMC & Biometrics Info Widget */
+.biometrics-summary-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: var(--glass-bg-hover);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.biometrics-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.biometrics-label {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.biometrics-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.biometrics-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  font-family: var(--font-title);
+}
+
+.imc-pill-badge {
+  font-size: 0.72rem;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.imc-pill-badge.success {
+  background: rgba(0, 138, 71, 0.15);
+  color: var(--accent-secondary);
+}
+
+.imc-pill-badge.warning {
+  background: rgba(227, 116, 0, 0.15);
+  color: var(--status-warning);
+}
+
+.imc-pill-badge.error {
+  background: rgba(225, 29, 72, 0.15);
+  color: var(--status-error);
+}
+
+.backup-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 580px) {
+  .backup-actions-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 
