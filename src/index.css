@@ -1028,4 +1028,235 @@ input[type=number] {
   }
 }
 
+/* Workout Receipt / Ticket Styles */
+.receipt-paper {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 24px;
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.receipt-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.receipt-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent-secondary);
+}
+
+.receipt-brand-title {
+  font-family: var(--font-title);
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.receipt-badge-stamp {
+  font-family: var(--font-title);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent-secondary);
+  background: var(--accent-purple-glow);
+  border: 1.5px solid var(--accent-secondary);
+  padding: 4px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.receipt-divider-dashed {
+  border-top: 1px dashed var(--border-color);
+  margin: 16px 0;
+}
+
+.receipt-title {
+  font-family: var(--font-title);
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.receipt-subtitle {
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+  margin: 2px 0 16px 0;
+}
+
+.receipt-details-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.receipt-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.receipt-detail-item .r-label {
+  font-size: 0.68rem;
+  color: var(--color-text-muted);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.receipt-detail-item .r-val {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.receipt-detail-item .r-val.highlight {
+  color: var(--accent-secondary);
+}
+
+.receipt-stats-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.r-stat-box {
+  background: var(--glass-bg-hover);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.r-stat-num {
+  font-family: var(--font-title);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.r-stat-num small {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+.r-stat-label {
+  font-size: 0.7rem;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.receipt-exercises-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.r-exercise-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  padding: 4px 0;
+}
+
+.r-ex-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.r-ex-name {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.r-ex-meta {
+  font-size: 0.72rem;
+  color: var(--color-text-secondary);
+}
+
+.r-ex-check {
+  color: var(--accent-secondary);
+  font-weight: 700;
+}
+
+.receipt-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.r-auth-code {
+  font-family: monospace;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  letter-spacing: 1px;
+}
+
+.r-footer-tag {
+  font-size: 0.7rem;
+  color: var(--color-text-secondary);
+}
+
+.receipt-actions-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+}
+
+.btn-view-receipt {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent-secondary);
+  background: var(--accent-purple-glow);
+  border: 1px solid var(--glass-border-hover);
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: all 0.2s ease;
+}
+
+.btn-view-receipt:hover {
+  background: var(--accent-secondary);
+  color: var(--color-on-accent);
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printable-receipt, #printable-receipt * {
+    visibility: visible;
+  }
+  #printable-receipt {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    border: none;
+    box-shadow: none;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
+
 

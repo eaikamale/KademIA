@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { TrashIcon, CalendarIcon, ClockIcon, InfoIcon, CheckIcon } from "./Icons";
+import { TrashIcon, CalendarIcon, ClockIcon, InfoIcon, CheckIcon, DownloadIcon } from "./Icons";
+import WorkoutReceiptModal from "./WorkoutReceiptModal";
 
 // Local inline chevrons for month navigation
 const ChevronLeftIcon = ({ size = 20 }) => (
@@ -21,10 +22,11 @@ const MONTHS = [
 
 const WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
-export default function History({ history, syncProps }) {
+export default function History({ history, onClearHistory, syncProps, profile }) {
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [selectedDate, setSelectedDate] = useState(() => new Date());
+  const [selectedReceiptSession, setSelectedReceiptSession] = useState(null);
 
   // Calendar calculations
   const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
@@ -252,6 +254,14 @@ export default function History({ history, syncProps }) {
                         <div className="meta-badge">
                           <span>Vol: {totalVolume.toLocaleString()} kg</span>
                         </div>
+                        <button
+                          type="button"
+                          className="btn-view-receipt"
+                          onClick={() => setSelectedReceiptSession(session)}
+                          style={{ margin: 0 }}
+                        >
+                          <DownloadIcon size={13} /> Comprovante
+                        </button>
                       </div>
 
                       {session.notes && (
@@ -660,16 +670,19 @@ export default function History({ history, syncProps }) {
           font-weight: 700;
         }
 
-        .set-check-ok {
-          color: var(--status-success);
-          font-weight: bold;
-        }
-
         .set-check-nok {
           color: var(--status-error);
           font-weight: bold;
         }
       `}</style>
+
+      {selectedReceiptSession && (
+        <WorkoutReceiptModal
+          session={selectedReceiptSession}
+          profile={profile}
+          onClose={() => setSelectedReceiptSession(null)}
+        />
+      )}
     </div>
   );
 }

@@ -772,6 +772,7 @@ export default function App() {
             history={history}
             onClearHistory={handleClearHistory}
             syncProps={syncProps}
+            profile={profile}
           />
         );
       case "settings":
@@ -834,6 +835,7 @@ export default function App() {
           history={history}
           onSaveWorkout={handleSaveWorkout}
           onCancelWorkout={handleCancelWorkout}
+          profile={profile}
         />
       </div>
     );

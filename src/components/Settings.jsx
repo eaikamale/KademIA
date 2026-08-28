@@ -612,30 +612,30 @@ export default function Settings({
         </div>
       </section>
 
-      {/* 5. Backup & File Export/Import Card */}
-      <section className="settings-section glass">
-        <h3 className="section-title">Gerenciamento de Dados & Backup</h3>
-        <p className="sync-info-text" style={{ marginBottom: "14px", marginTop: "6px" }}>
-          Exporte um arquivo com suas fichas, treinos e pesagens para salvar localmente ou carregar em outro aparelho.
+      {/* 5. Backup & File Export/Import (Secundário & Compacto) */}
+      <section className="settings-section glass" style={{ opacity: 0.85 }}>
+        <h3 className="section-title" style={{ fontSize: "0.95rem" }}>Backup Técnico (Arquivos JSON)</h3>
+        <p className="sync-info-text" style={{ marginBottom: "10px", marginTop: "4px", fontSize: "0.78rem" }}>
+          Opção avançada para exportação ou importação manual de dados via arquivo físico (.json).
         </p>
 
-        <div className="backup-actions-grid">
+        <div className="backup-actions-grid" style={{ display: "flex", gap: "8px" }}>
           <button 
             type="button" 
             className="btn btn-secondary"
             onClick={handleExportJSON}
-            style={{ justifyContent: "center" }}
+            style={{ justifyContent: "center", fontSize: "0.8rem", padding: "8px 12px", flex: 1 }}
           >
-            <DownloadIcon size={18} /> Exportar Backup (JSON)
+            <DownloadIcon size={14} /> Exportar JSON
           </button>
 
           <button 
             type="button" 
             className="btn btn-secondary"
             onClick={() => fileInputRef.current?.click()}
-            style={{ justifyContent: "center" }}
+            style={{ justifyContent: "center", fontSize: "0.8rem", padding: "8px 12px", flex: 1 }}
           >
-            <UploadIcon size={18} /> Importar Arquivo (JSON)
+            <UploadIcon size={14} /> Importar JSON
           </button>
 
           <input 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { CheckIcon, ClockIcon, InfoIcon, PlayIcon } from "./Icons";
 import Timer from "./Timer";
 import { exerciseGifs, getExerciseGif } from "../data/exerciseGifs";
+import WorkoutReceiptModal from "./WorkoutReceiptModal";
 
 // Componente de mídias de exercício com animação leve de 2 quadros (loop a cada 750ms)
 function ExerciseGifViewer({ name }) {
@@ -42,13 +43,14 @@ const isCardioEx = (name) => {
   return /cardio|corrida|trote|esteira|caminhada|bike|bicicleta|elíptico|running|spinning/i.test(name);
 };
 
-export default function ActiveWorkout({ routine, history, onSaveWorkout, onCancelWorkout }) {
+export default function ActiveWorkout({ routine, history, onSaveWorkout, onCancelWorkout, profile }) {
   const [exercisesState, setExercisesState] = useState([]);
   const [activeTimer, setActiveTimer] = useState(null);
   const [startTime, setStartTime] = useState(() => new Date());
   const [notes, setNotes] = useState("");
   const [isFinishing, setIsFinishing] = useState(false);
   const [expandedGifExId, setExpandedGifExId] = useState(null);
+  const [completedSession, setCompletedSession] = useState(null);
 
   const toggleGif = (exId) => {
     setExpandedGifExId(prev => (prev === exId ? null : exId));
@@ -235,18 +237,35 @@ export default function ActiveWorkout({ routine, history, onSaveWorkout, onCance
     // Clear active workout state on finish
     localStorage.removeItem("kademia_active_workout_state");
 
-    onSaveWorkout({
+    const sessionObj = {
       routineId: routine.id,
       routineName: routine.name,
       date: new Date().toISOString(),
       duration: durationMin,
       notes: notes,
       exercises: completedExercises
-    });
+    };
+
+    setCompletedSession(sessionObj);
+  };
+
+  const handleCloseReceiptAndFinish = () => {
+    if (completedSession) {
+      onSaveWorkout(completedSession);
+    }
   };
 
   return (
     <div className="active-workout-container animate-fade-in">
+      {/* Workout Receipt Modal upon finish */}
+      {completedSession && (
+        <WorkoutReceiptModal
+          session={completedSession}
+          profile={profile}
+          onClose={handleCloseReceiptAndFinish}
+        />
+      )}
+
       {/* Timer overlay if active */}
       {activeTimer && (
         <Timer
