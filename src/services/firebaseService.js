@@ -11,7 +11,8 @@ import {
   doc, 
   getDoc, 
   setDoc, 
-  onSnapshot 
+  onSnapshot,
+  deleteField
 } from "firebase/firestore";
 import { FIREBASE_CONFIG } from "../config";
 
@@ -65,6 +66,7 @@ export function subscribeAuthState(callback) {
 
 /**
  * Salva ou atualiza os dados completos do usuário no Firestore (`users/{userId}`).
+ * Purga qualquer campo legado antigo e associa o documento exclusivamente ao KademIA.
  */
 export async function saveUserDataToFirestore(userId, { workoutData, history, profile, profileHistory }) {
   if (!userId) return { success: false, error: "ID de usuário ausente" };
@@ -72,7 +74,15 @@ export async function saveUserDataToFirestore(userId, { workoutData, history, pr
   try {
     const userDocRef = doc(db, "users", userId);
     const payload = {
-      updatedAt: new Date().toISOString()
+      appName: "KademIA",
+      updatedAt: new Date().toISOString(),
+      // Purga campos legados antigos do documento Firestore se existirem
+      gymrotData: deleteField(),
+      gymwagData: deleteField(),
+      fittrackData: deleteField(),
+      gymwag_backup: deleteField(),
+      gymrot_history: deleteField(),
+      fittrack_history: deleteField()
     };
 
     if (workoutData !== undefined) payload.workoutData = workoutData;
