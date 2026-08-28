@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { PlusIcon, TrashIcon, CheckIcon, EditIcon, DragHandleIcon } from "./Icons";
 import { defaultWorkout } from "../data/defaultWorkout";
-import SyncStatusIndicator from "./SyncStatusIndicator";
 
 export default function RoutineManager({ workoutData, onUpdateWorkoutData, syncProps }) {
   const [selectedRoutineId, setSelectedRoutineId] = useState(() => {
@@ -262,14 +261,6 @@ export default function RoutineManager({ workoutData, onUpdateWorkoutData, syncP
     <div className="routine-manager-container animate-fade-in">
       <header className="routine-manager-header">
         <h2 className="routine-manager-title">Gerenciar Fichas</h2>
-        {syncProps && (
-          <SyncStatusIndicator
-            status={syncProps.status}
-            lastSync={syncProps.lastSync}
-            isOnline={syncProps.isOnline}
-            onSync={syncProps.onSync}
-          />
-        )}
       </header>
 
       {/* Routine Selector Tabs */}

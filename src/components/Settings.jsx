@@ -55,7 +55,7 @@ export default function Settings({
 
   const handleSelectColor = (hex) => {
     setSecondaryColor(hex);
-    applyAccentColorToDOM(hex);
+    applyAccentColorToDOM(hex, theme);
     onUpdateProfile({ 
       ...profile,
       name,

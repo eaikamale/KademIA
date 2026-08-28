@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { TrashIcon, CalendarIcon, ClockIcon, InfoIcon, CheckIcon } from "./Icons";
-import SyncStatusIndicator from "./SyncStatusIndicator";
 
 // Local inline chevrons for month navigation
 const ChevronLeftIcon = ({ size = 20 }) => (
@@ -157,14 +156,6 @@ export default function History({ history, syncProps }) {
     <div className="history-container animate-fade-in">
       <header className="history-header">
         <h2 className="history-title">Histórico</h2>
-        {syncProps && (
-          <SyncStatusIndicator
-            status={syncProps.status}
-            lastSync={syncProps.lastSync}
-            isOnline={syncProps.isOnline}
-            onSync={syncProps.onSync}
-          />
-        )}
       </header>
 
       {history.length === 0 ? (

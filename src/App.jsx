@@ -108,6 +108,7 @@ function deduplicateProfileHistory(profileHistList) {
   const map = {};
   profileHistList.forEach(item => {
     if (!item) return;
+    if (item.weight === undefined || item.weight === null || item.weight === "") return;
     const key = getNormalizedDateKey(item.date);
     if (!map[key]) {
       map[key] = item;
@@ -564,11 +565,12 @@ export default function App() {
   }, [activeWorkoutRoutine]);
 
   const handleUpdateProfile = async (newProfile) => {
-    const weightChanged = newProfile.weight !== profile.weight && newProfile.weight !== "";
-    const heightChanged = newProfile.height !== profile.height && newProfile.height !== "";
+    const weightValid = newProfile.weight !== "" && newProfile.weight !== undefined && newProfile.weight !== null;
+    const weightChanged = weightValid && newProfile.weight !== profile.weight;
+    const heightChanged = (newProfile.height !== profile.height && newProfile.height !== "" && newProfile.height !== undefined && newProfile.height !== null);
 
     let updatedHistory = [...profileHistory];
-    if (weightChanged || heightChanged || updatedHistory.length === 0) {
+    if (weightValid && (weightChanged || heightChanged)) {
       updatedHistory.push({
         date: new Date().toISOString(),
         name: newProfile.name,

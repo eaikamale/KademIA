@@ -1,6 +1,5 @@
 import React from "react";
 import { BarbellIcon, TrophyIcon, HistoryIcon, EditIcon, PlayIcon } from "./Icons";
-import SyncStatusIndicator from "./SyncStatusIndicator";
 
 export default function Dashboard({ workoutData, history, onStartWorkout, onSetActiveTab, profile, syncProps }) {
   // Simple weekly tracker (last 7 days)
@@ -77,14 +76,6 @@ export default function Dashboard({ workoutData, history, onStartWorkout, onSetA
             <TrophyIcon size={18} className="badge-icon" />
             <span><strong>{totalWorkouts}</strong> treinos</span>
           </div>
-          {syncProps && (
-            <SyncStatusIndicator
-              status={syncProps.status}
-              lastSync={syncProps.lastSync}
-              isOnline={syncProps.isOnline}
-              onSync={syncProps.onSync}
-            />
-          )}
         </div>
       </header>
 
