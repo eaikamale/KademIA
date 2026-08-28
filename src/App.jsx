@@ -118,6 +118,18 @@ function deduplicateProfileHistory(profileHistList) {
   return Object.values(map).sort((a, b) => new Date(a.date) - new Date(b.date));
 }
 
+function mergeHistory(localList, remoteList) {
+  const arrLocal = Array.isArray(localList) ? localList : [];
+  const arrRemote = Array.isArray(remoteList) ? remoteList : [];
+  return deduplicateHistory([...arrLocal, ...arrRemote]);
+}
+
+function mergeProfileHistory(localList, remoteList) {
+  const arrLocal = Array.isArray(localList) ? localList : [];
+  const arrRemote = Array.isArray(remoteList) ? remoteList : [];
+  return deduplicateProfileHistory([...arrLocal, ...arrRemote]);
+}
+
 function sanitizeWorkoutData(workoutData) {
   if (!workoutData || !Array.isArray(workoutData.routines)) {
     return defaultWorkout;
@@ -334,38 +346,43 @@ export default function App() {
           uid: user.uid
         });
 
-        // Fetch initial user data from Firestore on login
+        // Fetch initial user data from Firestore on login and bi-directionally merge
         try {
           const remoteData = await fetchUserDataFromFirestore(user.uid);
-          if (remoteData) {
-            if (remoteData.workoutData) {
-              const cleanWd = sanitizeWorkoutData(remoteData.workoutData);
-              setWorkoutData(cleanWd);
-              localStorage.setItem("kademia_workout_data", JSON.stringify(cleanWd));
-            }
-            if (remoteData.history) {
-              const cleanHist = deduplicateHistory(remoteData.history);
-              setHistory(cleanHist);
-              localStorage.setItem("kademia_history", JSON.stringify(cleanHist));
-            }
-            if (remoteData.profile) {
-              setProfile(remoteData.profile);
-              localStorage.setItem("kademia_profile", JSON.stringify(remoteData.profile));
-            }
-            if (remoteData.profileHistory) {
-              const cleanProfHist = deduplicateProfileHistory(remoteData.profileHistory);
-              setProfileHistory(cleanProfHist);
-              localStorage.setItem("kademia_profile_history", JSON.stringify(cleanProfHist));
-            }
-          } else {
-            // Document doesn't exist yet, seed initial local data to Firestore
-            await saveUserDataToFirestore(user.uid, {
-              workoutData: latestDataRef.current.workoutData,
-              history: latestDataRef.current.history,
-              profile: latestDataRef.current.profile,
-              profileHistory: latestDataRef.current.profileHistory
-            });
-          }
+          
+          const localHist = latestDataRef.current.history || [];
+          const remoteHist = remoteData?.history || [];
+          const mergedHist = mergeHistory(localHist, remoteHist);
+
+          const localProfHist = latestDataRef.current.profileHistory || [];
+          const remoteProfHist = remoteData?.profileHistory || [];
+          const mergedProfHist = mergeProfileHistory(localProfHist, remoteProfHist);
+
+          const localProf = latestDataRef.current.profile || {};
+          const remoteProf = remoteData?.profile || {};
+          const mergedProf = { ...localProf, ...remoteProf };
+
+          const finalWorkoutData = remoteData?.workoutData ? sanitizeWorkoutData(remoteData.workoutData) : latestDataRef.current.workoutData;
+
+          // Update local states
+          setHistory(mergedHist);
+          setProfileHistory(mergedProfHist);
+          setProfile(mergedProf);
+          setWorkoutData(finalWorkoutData);
+
+          // Update localStorage
+          localStorage.setItem("kademia_history", JSON.stringify(mergedHist));
+          localStorage.setItem("kademia_profile_history", JSON.stringify(mergedProfHist));
+          localStorage.setItem("kademia_profile", JSON.stringify(mergedProf));
+          localStorage.setItem("kademia_workout_data", JSON.stringify(finalWorkoutData));
+
+          // Save unified merged payload to Firestore
+          await saveUserDataToFirestore(user.uid, {
+            workoutData: finalWorkoutData,
+            history: mergedHist,
+            profile: mergedProf,
+            profileHistory: mergedProfHist
+          });
         } catch (err) {
           console.error("Erro ao sincronizar Firestore ao autenticar:", err);
         }
@@ -388,13 +405,13 @@ export default function App() {
         setWorkoutData(sanitizeWorkoutData(remoteData.workoutData));
       }
       if (remoteData.history) {
-        setHistory(deduplicateHistory(remoteData.history));
+        setHistory(prevLocal => mergeHistory(prevLocal, remoteData.history));
       }
       if (remoteData.profile) {
-        setProfile(remoteData.profile);
+        setProfile(prevLocal => ({ ...prevLocal, ...remoteData.profile }));
       }
       if (remoteData.profileHistory) {
-        setProfileHistory(deduplicateProfileHistory(remoteData.profileHistory));
+        setProfileHistory(prevLocal => mergeProfileHistory(prevLocal, remoteData.profileHistory));
       }
 
       setSyncStatus("synced");
@@ -677,11 +694,34 @@ export default function App() {
     if (!googleSyncSettings.connected || !googleSyncSettings.uid) return;
 
     await runSyncTask(async () => {
+      const remoteData = await fetchUserDataFromFirestore(googleSyncSettings.uid);
+
+      const localHist = latestDataRef.current.history || [];
+      const remoteHist = remoteData?.history || [];
+      const mergedHist = mergeHistory(localHist, remoteHist);
+
+      const localProfHist = latestDataRef.current.profileHistory || [];
+      const remoteProfHist = remoteData?.profileHistory || [];
+      const mergedProfHist = mergeProfileHistory(localProfHist, remoteProfHist);
+
+      const mergedProf = { ...(latestDataRef.current.profile || {}), ...(remoteData?.profile || {}) };
+      const finalWorkoutData = latestDataRef.current.workoutData || remoteData?.workoutData || defaultWorkout;
+
+      setHistory(mergedHist);
+      setProfileHistory(mergedProfHist);
+      setProfile(mergedProf);
+      setWorkoutData(finalWorkoutData);
+
+      localStorage.setItem("kademia_history", JSON.stringify(mergedHist));
+      localStorage.setItem("kademia_profile_history", JSON.stringify(mergedProfHist));
+      localStorage.setItem("kademia_profile", JSON.stringify(mergedProf));
+      localStorage.setItem("kademia_workout_data", JSON.stringify(finalWorkoutData));
+
       await saveUserDataToFirestore(googleSyncSettings.uid, {
-        workoutData: latestDataRef.current.workoutData,
-        history: latestDataRef.current.history,
-        profile: latestDataRef.current.profile,
-        profileHistory: latestDataRef.current.profileHistory
+        workoutData: finalWorkoutData,
+        history: mergedHist,
+        profile: mergedProf,
+        profileHistory: mergedProfHist
       });
     });
   };
