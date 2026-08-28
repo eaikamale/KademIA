@@ -117,6 +117,20 @@ export default function Timer({ duration, onFinish, onCancel }) {
     return () => clearInterval(timerRef.current);
   }, [isActive, timeLeft, endTime, onFinish]);
 
+  // Atualizar o título do navegador (document.title) com a contagem regressiva em tempo real
+  useEffect(() => {
+    const originalTitle = document.title;
+    if (isActive && timeLeft > 0) {
+      const mins = Math.floor(timeLeft / 60);
+      const secs = timeLeft % 60;
+      const formatted = `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+      document.title = `⏱️ ${formatted} - Descanso | KademIA`;
+    }
+    return () => {
+      document.title = originalTitle;
+    };
+  }, [isActive, timeLeft]);
+
   const toggleTimer = () => {
     if (isActive) {
       setIsActive(false);

@@ -1,5 +1,5 @@
 import React from "react";
-import { BarbellIcon, TrophyIcon, HistoryIcon, EditIcon, PlayIcon } from "./Icons";
+import { BarbellIcon, TrophyIcon, HistoryIcon, EditIcon, PlayIcon, FlameIcon } from "./Icons";
 
 export default function Dashboard({ workoutData, history, onStartWorkout, onSetActiveTab, profile, syncProps }) {
   // Simple weekly tracker (last 7 days)
@@ -56,11 +56,48 @@ export default function Dashboard({ workoutData, history, onStartWorkout, onSetA
   
   // Calculate total stats
   const totalWorkouts = history.length;
-  const totalWeight = history.reduce((acc, curr) => {
-    // Sum all loads * sets
-    return acc + (curr.exercises?.reduce((sum, ex) => sum + (parseFloat(ex.load) || 0) * (parseInt(ex.sets) || 3), 0) || 0);
-  }, 0);
+  
+  // Calculate max streak ("Sua Maior Ofensiva" - maior sequência de dias seguidos com treinos registrados)
+  const getMaxStreak = () => {
+    if (!history || history.length === 0) return 0;
 
+    const uniqueDates = Array.from(
+      new Set(
+        history
+          .map((item) => {
+            const d = new Date(item.date);
+            if (isNaN(d.getTime())) return null;
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+          })
+          .filter(Boolean)
+      )
+    ).sort();
+
+    if (uniqueDates.length === 0) return 0;
+
+    let maxStreak = 1;
+    let currentStreak = 1;
+
+    for (let i = 1; i < uniqueDates.length; i++) {
+      const prev = new Date(uniqueDates[i - 1] + "T00:00:00");
+      const curr = new Date(uniqueDates[i] + "T00:00:00");
+      const diffTime = curr.getTime() - prev.getTime();
+      const diffDays = Math.round(diffTime / (1000 * 3600 * 24));
+
+      if (diffDays === 1) {
+        currentStreak += 1;
+        if (currentStreak > maxStreak) {
+          maxStreak = currentStreak;
+        }
+      } else if (diffDays > 1) {
+        currentStreak = 1;
+      }
+    }
+
+    return maxStreak;
+  };
+
+  const maxStreak = getMaxStreak();
   const lastWorkout = history[0] ? new Date(history[0].date).toLocaleDateString("pt-BR") : "Nenhum";
 
   return (
@@ -104,10 +141,10 @@ export default function Dashboard({ workoutData, history, onStartWorkout, onSetA
           </div>
         </div>
         <div className="stat-card glass">
-          <BarbellIcon size={20} className="stat-icon lime" />
+          <FlameIcon size={20} className="stat-icon orange" />
           <div className="stat-info">
-            <span className="stat-value">{totalWeight.toLocaleString()} kg</span>
-            <span className="stat-label">Volume Total</span>
+            <span className="stat-value">{maxStreak} {maxStreak === 1 ? "dia" : "dias"}</span>
+            <span className="stat-label">Sua Maior Ofensiva</span>
           </div>
         </div>
       </section>
@@ -284,6 +321,11 @@ export default function Dashboard({ workoutData, history, onStartWorkout, onSetA
         .stat-icon.lime {
           color: var(--accent-lime);
           background: var(--accent-purple-glow);
+        }
+
+        .stat-icon.orange {
+          color: #FF6B00;
+          background: rgba(255, 107, 0, 0.12);
         }
 
         .stat-info {
