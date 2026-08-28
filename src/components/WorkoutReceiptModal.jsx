@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { BarbellIcon, CheckIcon, DownloadIcon, InfoIcon } from "./Icons";
+import { BarbellIcon, DownloadIcon } from "./Icons";
+import { generateWorkoutReceiptImage } from "../utils/receiptGenerator";
 
 export default function WorkoutReceiptModal({ session, profile, onClose }) {
-  const [copied, setCopied] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
 
   if (!session) return null;
 
@@ -31,36 +32,45 @@ export default function WorkoutReceiptModal({ session, profile, onClose }) {
   const authCode = `#KDM-${dateObj.getTime().toString(36).toUpperCase()}`;
   const athleteName = profile?.name || "Wagner";
 
-  // Copy text receipt to clipboard
-  const handleCopyText = () => {
-    const textReceipt = `🏆 COMPROVANTE KADEMIA - TÁ PAGO! ✓\n` +
-      `---------------------------------\n` +
-      `👤 Atleta: ${athleteName}\n` +
-      `🏋️ Treino: ${session.routineName}\n` +
-      `📅 Data: ${formattedDate} às ${formattedTime}\n` +
-      `⏱️ Duração: ${session.duration || 0} min\n` +
-      `💪 Volume Total: ${totalVolume.toLocaleString("pt-BR")} kg\n` +
-      `✅ Séries Concluídas: ${completedSetsCount}\n` +
-      `---------------------------------\n` +
-      `KademIA - Treino de Alta Performance\n` +
-      `Código: ${authCode}`;
+  // Generate JPG and trigger Native Share or Direct File Download
+  const handleSaveOrShareJPG = async () => {
+    setIsSharing(true);
+    try {
+      const blob = await generateWorkoutReceiptImage(session, profile);
+      const fileName = `comprovante_treino_${session.routineId}_${dateObj.toISOString().split("T")[0]}.jpg`;
+      const file = new File([blob], fileName, { type: "image/jpeg" });
 
-    navigator.clipboard.writeText(textReceipt).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 3000);
-    });
-  };
-
-  // Trigger print dialog (for PDF saving / printing)
-  const handlePrintPDF = () => {
-    window.print();
+      // Check if Web Share API with File sharing is supported
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: `Comprovante de Treino - KademIA`,
+          text: `Treino ${session.routineName} concluído! 💪`,
+          files: [file]
+        });
+      } else {
+        // Fallback: Direct JPG download
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+    } catch (err) {
+      console.error("Erro ao gerar ou compartilhar comprovante:", err);
+      alert("Não foi possível gerar a imagem do comprovante. Tente novamente.");
+    } finally {
+      setIsSharing(false);
+    }
   };
 
   return (
     <div className="modal-overlay animate-fade-in" style={{ zIndex: 11000 }}>
       <div className="modal-content receipt-modal-box glass animate-slide-up" style={{ maxWidth: "440px", padding: "0" }}>
         
-        {/* Printable Receipt Body */}
+        {/* Printable / Viewable Receipt Body */}
         <div id="printable-receipt" className="receipt-paper">
           {/* Header */}
           <div className="receipt-header">
@@ -139,16 +149,24 @@ export default function WorkoutReceiptModal({ session, profile, onClose }) {
           </div>
         </div>
 
-        {/* Action Buttons (Excluded from Print) */}
+        {/* Action Buttons */}
         <div className="receipt-actions-bar no-print">
-          <button type="button" className="btn btn-lime" onClick={handlePrintPDF}>
-            <DownloadIcon size={16} /> Salvar PDF / Imprimir
+          <button 
+            type="button" 
+            className="btn btn-lime" 
+            onClick={handleSaveOrShareJPG}
+            disabled={isSharing}
+            style={{ justifyContent: "center" }}
+          >
+            <DownloadIcon size={16} /> {isSharing ? "Gerando Imagem JPG..." : "Salvar / Compartilhar"}
           </button>
-          <button type="button" className="btn btn-secondary" onClick={handleCopyText}>
-            {copied ? <CheckIcon size={16} /> : <InfoIcon size={16} />}
-            {copied ? "Copiado!" : "Copiar p/ WhatsApp"}
-          </button>
-          <button type="button" className="btn btn-secondary" onClick={onClose}>
+          
+          <button 
+            type="button" 
+            className="btn btn-secondary" 
+            onClick={onClose}
+            style={{ justifyContent: "center" }}
+          >
             Fechar
           </button>
         </div>
