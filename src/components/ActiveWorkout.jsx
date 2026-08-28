@@ -2,15 +2,27 @@ import React, { useState, useEffect } from "react";
 import { CheckIcon, ClockIcon, InfoIcon, PlayIcon } from "./Icons";
 import Timer from "./Timer";
 import { exerciseGifs, getExerciseGif } from "../data/exerciseGifs";
+import { getMuscleWikiVideoUrl } from "../services/musclewiki";
 import WorkoutReceiptModal from "./WorkoutReceiptModal";
 
-// Componente de mídias de exercício com suporte a GIF/Vídeo nativo e transição fluida suave (CSS Crossfade)
+// Componente de mídias de exercício com suporte a MuscleWiki (Pessoas Reais em HD), Vídeo nativo e GIFs animados
 function ExerciseGifViewer({ name }) {
-  const mediaObj = getExerciseGif(name);
+  const localMedia = getExerciseGif(name);
+  const [mwVideo, setMwVideo] = useState(null);
   const [activeFrame, setActiveFrame] = useState(0);
 
+  useEffect(() => {
+    let isMounted = true;
+    getMuscleWikiVideoUrl(name).then((url) => {
+      if (isMounted && url) setMwVideo(url);
+    });
+    return () => { isMounted = false; };
+  }, [name]);
+
+  const mediaObj = mwVideo || localMedia;
+
   const isAnimatedFile = typeof mediaObj === "string" && (
-    mediaObj.endsWith(".gif") || mediaObj.endsWith(".webp") || mediaObj.endsWith(".mp4")
+    mediaObj.endsWith(".gif") || mediaObj.endsWith(".webp") || mediaObj.endsWith(".mp4") || mediaObj.includes("musclewiki.com")
   );
 
   useEffect(() => {
@@ -26,7 +38,7 @@ function ExerciseGifViewer({ name }) {
   if (!mediaObj) return null;
 
   if (isAnimatedFile) {
-    if (mediaObj.endsWith(".mp4")) {
+    if (mediaObj.endsWith(".mp4") || mediaObj.includes(".mp4") || mediaObj.includes("musclewiki.com")) {
       return (
         <div className="exercise-gif-drawer animate-slide-down">
           <video
