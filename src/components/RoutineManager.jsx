@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { PlusIcon, TrashIcon, CheckIcon, EditIcon, DragHandleIcon } from "./Icons";
 import { defaultWorkout } from "../data/defaultWorkout";
+import { searchExerciseGifs, getAllAvailableGifs, getExerciseGif } from "../data/exerciseGifs";
 
 export default function RoutineManager({ workoutData, onUpdateWorkoutData, syncProps }) {
   const [selectedRoutineId, setSelectedRoutineId] = useState(() => {
@@ -15,10 +16,15 @@ export default function RoutineManager({ workoutData, onUpdateWorkoutData, syncP
     sets: 3,
     reps: "10",
     rest: 60,
-    observations: ""
+    observations: "",
+    gifUrl: ""
   });
 
   const [isAdding, setIsAdding] = useState(false);
+
+  // GIF Picker Modal State
+  const [isGifPickerOpen, setIsGifPickerOpen] = useState(false);
+  const [gifSearchQuery, setGifSearchQuery] = useState("");
 
   // Drag and Drop State
   const [draggedIndex, setDraggedIndex] = useState(null);
@@ -52,7 +58,8 @@ export default function RoutineManager({ workoutData, onUpdateWorkoutData, syncP
       sets: 3,
       reps: "10",
       rest: 60,
-      observations: ""
+      observations: "",
+      gifUrl: ""
     });
     setIsAdding(true);
     setEditingExerciseId(null);
@@ -64,7 +71,8 @@ export default function RoutineManager({ workoutData, onUpdateWorkoutData, syncP
       sets: ex.sets,
       reps: ex.reps,
       rest: ex.rest,
-      observations: ex.observations || ""
+      observations: ex.observations || "",
+      gifUrl: ex.gifUrl || ex.customGif || ""
     });
     setEditingExerciseId(ex.id);
     setIsAdding(false);
@@ -85,7 +93,8 @@ export default function RoutineManager({ workoutData, onUpdateWorkoutData, syncP
           sets: parseInt(exerciseForm.sets) || 3,
           reps: exerciseForm.reps.toString(),
           rest: parseInt(exerciseForm.rest) || 60,
-          observations: exerciseForm.observations.trim()
+          observations: exerciseForm.observations.trim(),
+          gifUrl: exerciseForm.gifUrl || undefined
         };
         updatedExercises = [...routine.exercises, newExercise];
       } else {
@@ -97,7 +106,8 @@ export default function RoutineManager({ workoutData, onUpdateWorkoutData, syncP
             sets: parseInt(exerciseForm.sets) || 3,
             reps: exerciseForm.reps.toString(),
             rest: parseInt(exerciseForm.rest) || 60,
-            observations: exerciseForm.observations.trim()
+            observations: exerciseForm.observations.trim(),
+            gifUrl: exerciseForm.gifUrl || undefined
           };
         });
       }
@@ -365,6 +375,53 @@ export default function RoutineManager({ workoutData, onUpdateWorkoutData, syncP
                 </div>
               </div>
 
+              {/* GIF Selector Field */}
+              <div className="form-group">
+                <label className="form-label" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span>Demonstração Visual (GIF)</span>
+                  {exerciseForm.gifUrl && (
+                    <button
+                      type="button"
+                      style={{ fontSize: "0.75rem", cursor: "pointer", background: "none", border: "none", color: "#FF5252", fontWeight: 600 }}
+                      onClick={() => setExerciseForm({ ...exerciseForm, gifUrl: "" })}
+                    >
+                      Remover GIF
+                    </button>
+                  )}
+                </label>
+
+                <div className="gif-form-preview-card">
+                  {exerciseForm.gifUrl || getExerciseGif(exerciseForm.name) ? (
+                    <div className="gif-preview-media">
+                      <img
+                        src={exerciseForm.gifUrl || getExerciseGif(exerciseForm.name)}
+                        alt="Demonstração selecionada"
+                        className="exercise-gif"
+                        style={{ maxHeight: "110px", borderRadius: "8px", objectFit: "contain" }}
+                      />
+                      <span className="gif-badge">
+                        {exerciseForm.gifUrl ? "GIF Personalizado" : "GIF Automático"}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="gif-empty-info">
+                      <span>Nenhum GIF selecionado</span>
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    className="btn-gif-picker-trigger"
+                    onClick={() => {
+                      setGifSearchQuery(exerciseForm.name || "");
+                      setIsGifPickerOpen(true);
+                    }}
+                  >
+                    🔍 {exerciseForm.gifUrl || getExerciseGif(exerciseForm.name) ? "Trocar GIF" : "Buscar & Selecionar GIF"}
+                  </button>
+                </div>
+              </div>
+
               <div className="form-group">
                 <label className="form-label">Observações / Dicas de Execução</label>
                 <input
@@ -522,6 +579,68 @@ export default function RoutineManager({ workoutData, onUpdateWorkoutData, syncP
                 </button>
               </div>
             </form>
+      {/* Modal Seletor de GIF com Busca */}
+      {isGifPickerOpen && (
+        <div className="routine-modal-overlay animate-fade-in" style={{ zIndex: 1000 }}>
+          <div className="routine-modal gif-picker-modal animate-slide-up" style={{ maxWidth: "480px", maxHeight: "85vh", display: "flex", flexDirection: "column" }}>
+            <div className="gif-modal-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <h3 className="modal-title">🎬 Selecionar GIF de Demonstração</h3>
+              <button
+                type="button"
+                className="btn-icon"
+                onClick={() => setIsGifPickerOpen(false)}
+                style={{ width: "32px", height: "32px", fontSize: "1rem" }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="gif-modal-body" style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "12px", paddingRight: "4px" }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="Pesquise o exercício (ex: Supino, Agachamento, Rosca)..."
+                  value={gifSearchQuery}
+                  onChange={(e) => setGifSearchQuery(e.target.value)}
+                  autoFocus
+                />
+              </div>
+
+              <div className="gif-grid">
+                {searchExerciseGifs(gifSearchQuery).map((item) => {
+                  const currentSelected = exerciseForm.gifUrl || getExerciseGif(exerciseForm.name);
+                  const isSelected = currentSelected === item.gifUrl;
+                  return (
+                    <div
+                      key={item.name}
+                      className={`gif-grid-item ${isSelected ? "selected" : ""}`}
+                      onClick={() => {
+                        setExerciseForm({ ...exerciseForm, gifUrl: item.gifUrl });
+                        setIsGifPickerOpen(false);
+                      }}
+                    >
+                      <div className="gif-item-media">
+                        <img src={item.gifUrl} alt={item.name} loading="lazy" />
+                      </div>
+                      <span className="gif-item-title">{item.name}</span>
+                    </div>
+                  );
+                })}
+
+                {searchExerciseGifs(gifSearchQuery).length === 0 && (
+                  <div className="gif-no-results">
+                    Nenhum GIF encontrado para "{gifSearchQuery}". Tente pesquisar com outro nome.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="modal-actions" style={{ marginTop: "12px" }}>
+              <button type="button" className="btn btn-secondary" onClick={() => setIsGifPickerOpen(false)}>
+                Fechar
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -882,6 +1001,133 @@ export default function RoutineManager({ workoutData, onUpdateWorkoutData, syncP
 
         .modal-actions button {
           flex: 1;
+        }
+
+        /* GIF Picker Styles */
+        .gif-form-preview-card {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 10px 14px;
+          background: rgba(0, 0, 0, 0.03);
+          border: 1px dashed var(--border-color);
+          border-radius: 12px;
+          margin-top: 6px;
+        }
+
+        .dark-theme .gif-form-preview-card {
+          background: rgba(255, 255, 255, 0.02);
+        }
+
+        .gif-preview-media {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 4px;
+        }
+
+        .gif-badge {
+          font-size: 0.65rem;
+          padding: 2px 6px;
+          background: var(--accent-lime);
+          color: #000;
+          font-weight: 700;
+          border-radius: 4px;
+        }
+
+        .gif-empty-info {
+          flex: 1;
+          font-size: 0.85rem;
+          color: var(--color-text-secondary);
+        }
+
+        .btn-gif-picker-trigger {
+          padding: 8px 14px;
+          font-size: 0.85rem;
+          border-radius: 8px;
+          background: var(--bg-card);
+          border: 1px solid var(--border-color);
+          color: var(--color-text-primary);
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .btn-gif-picker-trigger:hover {
+          background: var(--bg-card-hover);
+          border-color: var(--accent-lime);
+        }
+
+        .gif-picker-modal {
+          overflow: hidden;
+        }
+
+        .gif-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+          gap: 10px;
+          max-height: 50vh;
+          overflow-y: auto;
+          padding: 4px;
+        }
+
+        .gif-grid-item {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 6px;
+          padding: 8px;
+          border-radius: 10px;
+          border: 2px solid var(--border-color);
+          background: var(--bg-card);
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .gif-grid-item:hover {
+          border-color: var(--accent-lime);
+          transform: translateY(-2px);
+        }
+
+        .gif-grid-item.selected {
+          border-color: var(--accent-lime);
+          box-shadow: 0 0 0 2px var(--accent-lime);
+        }
+
+        .gif-item-media {
+          width: 100%;
+          height: 100px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+        }
+
+        .gif-item-media img {
+          max-width: 100%;
+          max-height: 100%;
+          object-fit: contain;
+        }
+
+        .dark-theme .gif-item-media img {
+          filter: invert(0.92) hue-rotate(180deg);
+        }
+
+        .gif-item-title {
+          font-size: 0.75rem;
+          font-weight: 600;
+          color: var(--color-text-primary);
+          text-align: center;
+          line-height: 1.2;
+        }
+
+        .gif-no-results {
+          grid-column: 1 / -1;
+          text-align: center;
+          padding: 24px;
+          font-size: 0.9rem;
+          color: var(--color-text-secondary);
         }
       `}</style>
     </div>

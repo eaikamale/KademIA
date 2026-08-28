@@ -5,8 +5,8 @@ import { exerciseGifs, getExerciseGif } from "../data/exerciseGifs";
 import WorkoutReceiptModal from "./WorkoutReceiptModal";
 
 // Componente de mídias de exercício com suporte a GIF/Vídeo nativo e transição fluida suave (CSS Crossfade)
-function ExerciseGifViewer({ name }) {
-  const mediaObj = getExerciseGif(name);
+function ExerciseGifViewer({ name, gifUrl }) {
+  const mediaObj = gifUrl || getExerciseGif(name);
   const [activeFrame, setActiveFrame] = useState(0);
 
   const isAnimatedFile = typeof mediaObj === "string" && (
@@ -403,7 +403,7 @@ export default function ActiveWorkout({ routine, history, onSaveWorkout, onCance
                   )}
 
                   {expandedGifExId === ex.id && (
-                    <ExerciseGifViewer name={ex.name} />
+                    <ExerciseGifViewer name={ex.name} gifUrl={ex.gifUrl || ex.customGif} />
                   )}
 
                   {/* Grid Headers (Adaptable for Cardio vs Strength) */}

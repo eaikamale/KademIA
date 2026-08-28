@@ -137,3 +137,35 @@ export function getExerciseGif(name) {
 
   return null;
 }
+
+/**
+ * Retorna uma lista de todas as mídias de exercícios disponíveis para o seletor.
+ */
+export function getAllAvailableGifs() {
+  const seenGifs = new Set();
+  const list = [];
+
+  for (const [name, gifUrl] of Object.entries(exerciseGifs)) {
+    if (!seenGifs.has(gifUrl)) {
+      seenGifs.add(gifUrl);
+      list.push({ name, gifUrl });
+    }
+  }
+
+  return list;
+}
+
+/**
+ * Filtra a lista de GIFs disponíveis por um termo de busca.
+ */
+export function searchExerciseGifs(query) {
+  const all = getAllAvailableGifs();
+  if (!query || !query.trim()) return all;
+
+  const n = query.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return all.filter((item) => {
+    const itemName = item.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    return itemName.includes(n);
+  });
+}
+
