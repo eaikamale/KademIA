@@ -136,9 +136,13 @@ export default function App() {
   // App data states
   const [workoutData, setWorkoutData] = useState(() => {
     try {
-      const saved = localStorage.getItem("kademia_workout_data") ||
-                    localStorage.getItem("gymrot_workout_data") ||
-                    localStorage.getItem("fittrack_workout_data");
+      // Clear old legacy keys from previous app names to prevent stale routines
+      localStorage.removeItem("gymrot_workout_data");
+      localStorage.removeItem("fittrack_workout_data");
+      localStorage.removeItem("gymrot_history");
+      localStorage.removeItem("fittrack_history");
+
+      const saved = localStorage.getItem("kademia_workout_data");
       return saved ? JSON.parse(saved) : defaultWorkout;
     } catch (e) {
       return defaultWorkout;
@@ -658,6 +662,17 @@ export default function App() {
     });
   };
 
+  const handleResetDefaultWorkout = async () => {
+    if (window.confirm("Deseja restaurar as fichas para a versão oficial (Ficha ABCD Otimizada - com treino B isolado de Ombros & Core)? As fichas serão atualizadas no seu aparelho e na nuvem imediatamente (seu histórico de treinos salvos NÃO será afetado).")) {
+      setWorkoutData(defaultWorkout);
+      localStorage.setItem("kademia_workout_data", JSON.stringify(defaultWorkout));
+      if (googleSyncSettings.connected && googleSyncSettings.uid) {
+        await saveUserDataToFirestore(googleSyncSettings.uid, { workoutData: defaultWorkout });
+      }
+      alert("Ficha ABCD Otimizada restaurada e sincronizada com a nuvem com sucesso!");
+    }
+  };
+
   const handleSync = async () => {
     if (!googleSyncSettings.connected || !googleSyncSettings.uid) return;
 
@@ -806,6 +821,7 @@ export default function App() {
             history={history}
             onImportBackup={handleImportBackup}
             onClearHistory={handleClearHistory}
+            onResetDefaultWorkout={handleResetDefaultWorkout}
             syncProps={syncProps}
           />
         );

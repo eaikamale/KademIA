@@ -27,6 +27,7 @@ export default function Settings({
   history,
   onImportBackup,
   onClearHistory,
+  onResetDefaultWorkout,
   syncProps
 }) {
   const defaultGreen = theme === "dark" ? "#ADFF2F" : "#008A47";
@@ -613,11 +614,22 @@ export default function Settings({
       </section>
 
       {/* 5. Backup & File Export/Import (Secundário & Compacto) */}
-      <section className="settings-section glass" style={{ opacity: 0.85 }}>
-        <h3 className="section-title" style={{ fontSize: "0.95rem" }}>Backup Técnico (Arquivos JSON)</h3>
-        <p className="sync-info-text" style={{ marginBottom: "10px", marginTop: "4px", fontSize: "0.78rem" }}>
-          Opção avançada para exportação ou importação manual de dados via arquivo físico (.json).
+      <section className="settings-section glass">
+        <h3 className="section-title">Gerenciamento de Dados & Fichas</h3>
+        <p className="sync-info-text" style={{ marginBottom: "12px", marginTop: "4px" }}>
+          Sincronize ou restaure a versão oficial das fichas no seu aparelho e na nuvem.
         </p>
+
+        {onResetDefaultWorkout && (
+          <button 
+            type="button" 
+            className="btn btn-secondary"
+            onClick={onResetDefaultWorkout}
+            style={{ width: "100%", justifyContent: "center", marginBottom: "12px" }}
+          >
+            <SyncIcon size={16} /> Carregar Ficha ABCD Otimizada (Oficial)
+          </button>
+        )}
 
         <div className="backup-actions-grid" style={{ display: "flex", gap: "8px" }}>
           <button 
