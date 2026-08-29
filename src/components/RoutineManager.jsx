@@ -579,6 +579,10 @@ export default function RoutineManager({ workoutData, onUpdateWorkoutData, syncP
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
       {/* Modal Seletor de GIF com Busca */}
       {isGifPickerOpen && (
         <div className="routine-modal-overlay animate-fade-in" style={{ zIndex: 1000 }}>
