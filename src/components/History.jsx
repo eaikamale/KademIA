@@ -685,11 +685,6 @@ export default function History({ history, onClearHistory, onDeleteWorkout, sync
           font-weight: 700;
         }
 
-        .set-check-ok {
-          color: #4ade80;
-          font-weight: bold;
-        }
-
         .set-check-nok {
           color: var(--status-error);
           font-weight: bold;

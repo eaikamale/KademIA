@@ -1029,14 +1029,24 @@ input[type=number] {
 }
 
 /* Workout Receipt / Ticket Styles */
+.receipt-modal-box {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
 .receipt-paper {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
-  padding: 24px;
+  background: var(--bg-card);
+  padding: 28px 24px;
   color: var(--color-text-primary);
   font-family: var(--font-body);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  filter: drop-shadow(0 10px 25px rgba(0, 0, 0, 0.4));
+  position: relative;
+  /* Jagged serrated thermal ticket edges at top & bottom */
+  clip-path: polygon(
+    0% 10px, 2.5% 0px, 5% 10px, 7.5% 0px, 10% 10px, 12.5% 0px, 15% 10px, 17.5% 0px, 20% 10px, 22.5% 0px, 25% 10px, 27.5% 0px, 30% 10px, 32.5% 0px, 35% 10px, 37.5% 0px, 40% 10px, 42.5% 0px, 45% 10px, 47.5% 0px, 50% 10px, 52.5% 0px, 55% 10px, 57.5% 0px, 60% 10px, 62.5% 0px, 65% 10px, 67.5% 0px, 70% 10px, 72.5% 0px, 75% 10px, 77.5% 0px, 80% 10px, 82.5% 0px, 85% 10px, 87.5% 0px, 90% 10px, 92.5% 0px, 95% 10px, 97.5% 0px, 100% 10px,
+    100% calc(100% - 10px), 97.5% 100%, 95% calc(100% - 10px), 92.5% 100%, 90% calc(100% - 10px), 87.5% 100%, 85% calc(100% - 10px), 82.5% 100%, 80% calc(100% - 10px), 77.5% 100%, 75% calc(100% - 10px), 72.5% 100%, 70% calc(100% - 10px), 67.5% 100%, 65% calc(100% - 10px), 62.5% 100%, 60% calc(100% - 10px), 57.5% 100%, 55% calc(100% - 10px), 52.5% 100%, 50% calc(100% - 10px), 47.5% 100%, 45% calc(100% - 10px), 42.5% 100%, 40% calc(100% - 10px), 37.5% 100%, 35% calc(100% - 10px), 32.5% 100%, 30% calc(100% - 10px), 27.5% 100%, 25% calc(100% - 10px), 22.5% 100%, 20% calc(100% - 10px), 17.5% 100%, 15% calc(100% - 10px), 12.5% 100%, 10% calc(100% - 10px), 7.5% 100%, 5% calc(100% - 10px), 2.5% 100%, 0% calc(100% - 10px)
+  );
 }
 
 .receipt-header {
