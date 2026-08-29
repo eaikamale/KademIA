@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kademia-cache-v5';
+const CACHE_NAME = 'kademia-cache-v6';
 const ASSETS_TO_CACHE = [
   './',
   'index.html',
@@ -33,34 +33,42 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  e.respondWith(
-    caches.match(e.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        fetch(e.request).then((networkResponse) => {
-          if (networkResponse.status === 200) {
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(e.request, networkResponse);
-            });
-          }
-        }).catch(() => {});
-        return cachedResponse;
-      }
+  const isCodeOrHtml = e.request.mode === 'navigate' || 
+                        e.request.url.endsWith('.html') || 
+                        e.request.url.endsWith('.js') || 
+                        e.request.url.endsWith('.css');
 
-      return fetch(e.request).then((networkResponse) => {
-        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
-          return networkResponse;
+  if (isCodeOrHtml) {
+    // Network-First for code and HTML to ensure immediate updates on new deploys
+    e.respondWith(
+      fetch(e.request).then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(e.request, responseToCache);
+          });
         }
-
-        const responseToCache = networkResponse.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(e.request, responseToCache);
-        });
-
         return networkResponse;
       }).catch(() => {
-        if (e.request.mode === 'navigate') {
-          return caches.match('/index.html');
+        return caches.match(e.request).then((cached) => cached || caches.match('./index.html'));
+      })
+    );
+    return;
+  }
+
+  // Cache-First for images, gifs and static media assets
+  e.respondWith(
+    caches.match(e.request).then((cachedResponse) => {
+      if (cachedResponse) return cachedResponse;
+
+      return fetch(e.request).then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(e.request, responseToCache);
+          });
         }
+        return networkResponse;
       });
     })
   );
