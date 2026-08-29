@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { TrashIcon, CalendarIcon, ClockIcon, InfoIcon, CheckIcon, DownloadIcon } from "./Icons";
+import { TrashIcon, CalendarIcon, ClockIcon, InfoIcon, CheckIcon, DownloadIcon, BarbellIcon } from "./Icons";
+import { generateWorkoutReceiptImage } from "../utils/receiptGenerator";
 import WorkoutReceiptModal from "./WorkoutReceiptModal";
 
 // Local inline chevrons for month navigation
@@ -28,6 +29,38 @@ export default function History({ history, onClearHistory, onDeleteWorkout, sync
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [selectedReceiptSession, setSelectedReceiptSession] = useState(null);
   const [sessionToDelete, setSessionToDelete] = useState(null);
+  const [isSharingId, setIsSharingId] = useState(null);
+
+  const handleDirectSharePNG = async (session) => {
+    setIsSharingId(session.id);
+    try {
+      const blob = await generateWorkoutReceiptImage(session, profile);
+      const fileName = `comprovante_treino_${session.routineId || "A"}_${new Date(session.date || Date.now()).toISOString().split("T")[0]}.png`;
+      const file = new File([blob], fileName, { type: "image/png" });
+
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: `Comprovante de Treino - KademIA`,
+          text: `Treino ${session.routineName} concluído! 💪`,
+          files: [file]
+        });
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+    } catch (err) {
+      console.error("Erro ao gerar imagem PNG:", err);
+      alert("Não foi possível gerar a imagem PNG do treino. Tente novamente.");
+    } finally {
+      setIsSharingId(null);
+    }
+  };
 
   // Calendar calculations
   const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
@@ -233,19 +266,40 @@ export default function History({ history, onClearHistory, onDeleteWorkout, sync
                     return acc + (ex.setsData?.reduce((sum, set) => sum + (parseFloat(set.load) || 0) * (parseInt(set.reps) || 0), 0) || 0);
                   }, 0) || 0;
 
+                  const totalSetsCount = session.exercises?.reduce((acc, ex) => {
+                    return acc + (ex.setsData?.length || 0);
+                  }, 0) || 0;
+
+                  const completedSetsCount = session.exercises?.reduce((acc, ex) => {
+                    return acc + (ex.setsData?.filter(s => s.completed).length || 0);
+                  }, 0) || 0;
+
                   return (
-                    <div key={session.id || sIdx} className="history-day-card glass animate-slide-up">
-                      <div className="day-card-header">
-                        <div>
-                          <span className="hist-routine-tag">{session.routineId}</span>
-                          <h4 className="hist-routine-name">
-                            {session.routineName.replace("Treino " + session.routineId + " - ", "")}
-                          </h4>
+                    <div key={session.id || sIdx} className="history-day-card receipt-paper animate-slide-up">
+                      {/* Ticket Header: KADEMIA Brand + Salvar/Compartilhar button + TÁ PAGO Stamp */}
+                      <div className="receipt-header-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px", flexWrap: "wrap", gap: "8px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                          <div className="receipt-brand" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                            <BarbellIcon size={20} className="receipt-logo-icon" />
+                            <span className="receipt-brand-title" style={{ fontSize: "1.1rem" }}>KADEMIA</span>
+                          </div>
+                          
+                          <button
+                            type="button"
+                            className="btn-save-share-header"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDirectSharePNG(session);
+                            }}
+                            disabled={isSharingId === session.id}
+                          >
+                            <DownloadIcon size={13} />
+                            {isSharingId === session.id ? "Gerando PNG..." : "Salvar / Compartilhar"}
+                          </button>
                         </div>
+
                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <span className="hist-time-tag">
-                            {formatSessionTime(session.date)}
-                          </span>
+                          <span className="receipt-badge-stamp">TÁ PAGO ✓</span>
                           <button
                             type="button"
                             className="btn-delete-workout-discreet"
@@ -261,22 +315,33 @@ export default function History({ history, onClearHistory, onDeleteWorkout, sync
                         </div>
                       </div>
 
-                      <div className="hist-meta-summary">
+                      <div className="receipt-divider-dashed" style={{ margin: "10px 0 14px 0" }}></div>
+
+                      {/* Routine Info Row: ID Badge + Routine Name + Time */}
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          <span className="hist-routine-tag">{(session.routineId || "A").toString().charAt(0).toUpperCase()}</span>
+                          <h4 className="hist-routine-name" style={{ margin: 0 }}>
+                            {session.routineName}
+                          </h4>
+                        </div>
+                        <span className="hist-time-tag">
+                          {formatSessionTime(session.date)}
+                        </span>
+                      </div>
+
+                      {/* Summary Badges Row */}
+                      <div className="hist-meta-summary" style={{ marginBottom: "14px", display: "flex", gap: "8px", flexWrap: "wrap" }}>
                         <div className="meta-badge">
                           <ClockIcon size={12} />
-                          <span>{session.duration} min</span>
+                          <span>{session.duration || 0} min</span>
                         </div>
                         <div className="meta-badge">
-                          <span>Vol: {totalVolume.toLocaleString()} kg</span>
+                          <span>Vol: {totalVolume.toLocaleString("pt-BR")} kg</span>
                         </div>
-                        <button
-                          type="button"
-                          className="btn-view-receipt"
-                          onClick={() => setSelectedReceiptSession(session)}
-                          style={{ margin: 0 }}
-                        >
-                          <DownloadIcon size={13} /> Salvar / Compartilhar
-                        </button>
+                        <div className="meta-badge green-highlight" style={{ background: "rgba(173, 255, 47, 0.15)", borderColor: "var(--accent-lime)", color: "var(--accent-lime)", fontWeight: "700" }}>
+                          <span>Séries: {completedSetsCount}/{totalSetsCount}</span>
+                        </div>
                       </div>
 
                       {session.notes && (
@@ -286,23 +351,26 @@ export default function History({ history, onClearHistory, onDeleteWorkout, sync
                         </div>
                       )}
 
-                      <div className="hist-details">
-                        <h5 className="details-title">Exercícios Realizados</h5>
+                      <div className="receipt-divider-dashed" style={{ margin: "10px 0 14px 0" }}></div>
+
+                      {/* Exercícios Realizados with Set Bubbles */}
+                      <div className="hist-details" style={{ margin: 0 }}>
+                        <h5 className="details-title" style={{ fontSize: "0.95rem", marginBottom: "12px" }}>Exercícios Realizados</h5>
                         <div className="details-exercises-list">
                           {session.exercises?.map((ex, exIdx) => (
-                            <div key={exIdx} className="details-ex-item">
-                              <span className="details-ex-name">{ex.name}</span>
+                            <div key={exIdx} className="details-ex-item" style={{ marginBottom: "14px" }}>
+                              <span className="details-ex-name" style={{ fontWeight: "700", display: "block", marginBottom: "6px" }}>{ex.name}</span>
                               <div className="details-sets-list">
                                 {ex.setsData?.map((set, setIdx) => (
                                   <div key={setIdx} className={`details-set-bubble ${set.completed ? "ok" : "nok"}`}>
-                                    <span className="set-num">{set.setNum}ª</span>
+                                    <span className="set-num">{set.setNum || (setIdx + 1)}ª</span>
                                     <span className="set-val">
                                       {set.load ? `${set.load}kg` : "--"} × {set.reps || "0"}
                                     </span>
                                     {set.completed ? (
                                       <span className="set-check-ok">✓</span>
                                     ) : (
-                                      <span className="set-check-nok">✗</span>
+                                      <span className="set-check-nok">✕</span>
                                     )}
                                   </div>
                                 ))}
@@ -610,6 +678,33 @@ export default function History({ history, onClearHistory, onDeleteWorkout, sync
           font-size: 0.75rem;
           color: var(--color-text-secondary);
           font-weight: 600;
+        }
+
+        .btn-save-share-header {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 4px 12px;
+          background: var(--accent-lime);
+          color: #000;
+          font-family: var(--font-body);
+          font-size: 0.78rem;
+          font-weight: 700;
+          border: 1px solid var(--accent-lime);
+          border-radius: 20px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          box-shadow: 0 2px 8px rgba(173, 255, 47, 0.2);
+        }
+
+        .btn-save-share-header:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(173, 255, 47, 0.35);
+        }
+
+        .btn-save-share-header:disabled {
+          opacity: 0.6;
+          cursor: wait;
         }
 
         .hist-note-snippet {
