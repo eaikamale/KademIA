@@ -1,23 +1,23 @@
 /**
  * Gera uma imagem JPG de alta definição do Comprovante de Treino KademIA
- * utilizando a API nativa HTML5 Canvas.
+ * utilizando o estilo de comprovante térmico (Estilo Lotérica / Caixa).
  */
 export function generateWorkoutReceiptImage(session, profile) {
   return new Promise((resolve, reject) => {
     try {
-      const athleteName = profile?.name || "Wagner";
-      const routineName = session.routineName || "Treino";
+      const athleteName = (profile?.name || "Wagner").toUpperCase();
+      const routineName = (session.routineName || "TREINO").toUpperCase();
       const dateObj = new Date(session.date || Date.now());
       
       const formattedDate = dateObj.toLocaleDateString("pt-BR", {
-        weekday: "short",
         day: "2-digit",
-        month: "short",
+        month: "2-digit",
         year: "numeric"
       });
       const formattedTime = dateObj.toLocaleTimeString("pt-BR", {
         hour: "2-digit",
-        minute: "2-digit"
+        minute: "2-digit",
+        second: "2-digit"
       });
 
       const totalVolume = session.exercises?.reduce((acc, ex) => {
@@ -30,12 +30,19 @@ export function generateWorkoutReceiptImage(session, profile) {
 
       const authCode = `#KDM-${dateObj.getTime().toString(36).toUpperCase()}`;
 
-      // Canvas dimensions (HD 2x resolution for crisp high-DPI rendering)
+      // Canvas dimensions (HD resolution for thermal receipt)
       const width = 640;
       const exercises = session.exercises || [];
-      const baseHeight = 440;
-      const exRowHeight = 42;
-      const height = baseHeight + exercises.length * exRowHeight;
+      
+      // Calculate dynamic height based on exercise sets count
+      let extraHeight = 0;
+      exercises.forEach(ex => {
+        const setsCount = ex.setsData?.length || 0;
+        const setRows = Math.ceil(setsCount / 3) || 1;
+        extraHeight += 32 + setRows * 28;
+      });
+
+      const height = Math.max(580, 360 + extraHeight);
 
       const canvas = document.createElement("canvas");
       canvas.width = width;
@@ -47,216 +54,221 @@ export function generateWorkoutReceiptImage(session, profile) {
         return;
       }
 
-      // Background dark fill
-      ctx.fillStyle = "#12151A";
+      // Background thermal paper color
+      ctx.fillStyle = "#F8F6F0";
       ctx.fillRect(0, 0, width, height);
 
-      // Card Container Box
-      ctx.fillStyle = "#1A1E26";
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
-      ctx.lineWidth = 2;
-      const margin = 24;
-      const cardW = width - margin * 2;
-      const cardH = height - margin * 2;
+      // Outer margin border
+      const margin = 20;
+      const contentW = width - margin * 2;
 
+      let y = margin + 30;
+
+      // Thermal Receipt Header
+      ctx.fillStyle = "#0F172A";
+      ctx.font = "bold 22px 'Courier New', Courier, monospace";
+      ctx.textAlign = "center";
+      ctx.fillText("KADEMIA FITNESS & TREINOS", width / 2, y);
+
+      y += 20;
+      ctx.fillStyle = "#475569";
+      ctx.font = "bold 13px 'Courier New', Courier, monospace";
+      ctx.fillText("COMPROVANTE OFICIAL DE EXECUÇÃO", width / 2, y);
+
+      y += 18;
+
+      // Double Line Divider
+      ctx.strokeStyle = "#0F172A";
+      ctx.lineWidth = 2.5;
       ctx.beginPath();
-      if (typeof ctx.roundRect === "function") {
-        ctx.roundRect(margin, margin, cardW, cardH, 16);
-      } else {
-        ctx.rect(margin, margin, cardW, cardH);
-      }
-      ctx.fill();
+      ctx.moveTo(margin, y);
+      ctx.lineTo(width - margin, y);
       ctx.stroke();
 
-      let y = margin + 38;
+      y += 22;
 
-      // Header: Brand Title
-      ctx.fillStyle = "#ADFF2F";
-      ctx.font = "bold 26px sans-serif";
+      // Meta Grid Date & Time
+      ctx.fillStyle = "#334155";
+      ctx.font = "bold 13px 'Courier New', Courier, monospace";
       ctx.textAlign = "left";
-      ctx.fillText("KADEMIA", margin + 24, y);
+      ctx.fillText(`DATA: ${formattedDate}`, margin, y);
+      ctx.textAlign = "right";
+      ctx.fillText(`HORA DF: ${formattedTime}`, width - margin, y);
 
-      // Stamp Badge "TÁ PAGO ✓"
-      const stampText = "TÁ PAGO ✓";
-      ctx.font = "bold 13px sans-serif";
-      const stampWidth = ctx.measureText(stampText).width + 24;
-      const stampX = width - margin - 24 - stampWidth;
-      
-      ctx.fillStyle = "rgba(173, 255, 47, 0.15)";
-      ctx.strokeStyle = "#ADFF2F";
-      ctx.lineWidth = 1.5;
+      y += 20;
+      ctx.textAlign = "left";
+      ctx.fillText(`AUTENTICAÇÃO: ${authCode}`, margin, y);
+
+      y += 20;
+      ctx.fillText(`LOCALIDADE: SÃO PAULO`, margin, y);
+      ctx.textAlign = "right";
+      ctx.fillText(`TERM: 021930`, width - margin, y);
+
+      y += 16;
+
+      // Dashed Line Separator
+      ctx.strokeStyle = "#64748B";
+      ctx.lineWidth = 1;
+      ctx.setLineDash([5, 5]);
       ctx.beginPath();
-      if (typeof ctx.roundRect === "function") {
-        ctx.roundRect(stampX, y - 20, stampWidth, 28, 14);
-      } else {
-        ctx.rect(stampX, y - 20, stampWidth, 28);
-      }
-      ctx.fill();
+      ctx.moveTo(margin, y);
+      ctx.lineTo(width - margin, y);
       ctx.stroke();
+      ctx.setLineDash([]);
 
-      ctx.fillStyle = "#ADFF2F";
-      ctx.fillText(stampText, stampX + 12, y - 1);
+      y += 22;
+
+      // Section Title
+      ctx.fillStyle = "#0F172A";
+      ctx.font = "bold 15px 'Courier New', Courier, monospace";
+      ctx.textAlign = "center";
+      ctx.fillText("COMPROVANTE DE CONCLUSAO DE TREINO", width / 2, y);
 
       y += 24;
 
-      // Title & Subtitle
-      ctx.fillStyle = "#FFFFFF";
-      ctx.font = "bold 20px sans-serif";
-      ctx.fillText("COMPROVANTE DE TREINO", margin + 24, y + 10);
+      // Athlete and Workout Info Block
+      ctx.textAlign = "left";
+      ctx.font = "bold 14px 'Courier New', Courier, monospace";
       
-      ctx.fillStyle = "#94A3B8";
-      ctx.font = "13px sans-serif";
-      ctx.fillText("Registro Oficial de Execução & Cargas", margin + 24, y + 30);
+      const drawThermalRow = (label, val, isGreen = false) => {
+        ctx.fillStyle = "#475569";
+        ctx.fillText(label, margin, y);
 
-      y += 50;
-
-      // Dashed Line Separator
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
-      ctx.setLineDash([6, 6]);
-      ctx.beginPath();
-      ctx.moveTo(margin + 24, y);
-      ctx.lineTo(width - margin - 24, y);
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      y += 30;
-
-      // Details Key-Value
-      const drawDetail = (label, val, highlight = false) => {
-        ctx.fillStyle = "#64748B";
-        ctx.font = "bold 11px sans-serif";
-        ctx.fillText(label, margin + 24, y);
-
-        ctx.fillStyle = highlight ? "#ADFF2F" : "#FFFFFF";
-        ctx.font = "bold 15px sans-serif";
-        ctx.fillText(val, margin + 24, y + 18);
-
-        y += 42;
+        ctx.fillStyle = isGreen ? "#047857" : "#0F172A";
+        ctx.fillText(val, margin + 140, y);
+        y += 22;
       };
 
-      drawDetail("ATLETA", athleteName);
-      drawDetail("FICHA / ROTINA", routineName, true);
-      drawDetail("DATA & HORÁRIO", `${formattedDate} às ${formattedTime}`);
-      drawDetail("DURAÇÃO TOTAL", `${session.duration || 0} minutos`);
+      drawThermalRow("ATLETA:", athleteName);
+      drawThermalRow("TREINO:", routineName, true);
+      drawThermalRow("DURAÇÃO:", `${session.duration || 0} MINUTOS`);
+      drawThermalRow("VOLUME:", `${totalVolume.toLocaleString("pt-BR")} KG`);
 
-      y += 5;
+      y += 6;
 
-      // Dashed Line
-      ctx.setLineDash([6, 6]);
+      // Double Line Divider
+      ctx.strokeStyle = "#0F172A";
+      ctx.lineWidth = 2.5;
       ctx.beginPath();
-      ctx.moveTo(margin + 24, y);
-      ctx.lineTo(width - margin - 24, y);
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      y += 25;
-
-      // Stats Row Boxes (Volume & Sets)
-      const boxW = (cardW - 64) / 2;
-      const boxH = 65;
-
-      // Box 1 - Volume Total
-      ctx.fillStyle = "rgba(255, 255, 255, 0.04)";
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      if (typeof ctx.roundRect === "function") {
-        ctx.roundRect(margin + 24, y, boxW, boxH, 12);
-      } else {
-        ctx.rect(margin + 24, y, boxW, boxH);
-      }
-      ctx.fill();
+      ctx.moveTo(margin, y);
+      ctx.lineTo(width - margin, y);
       ctx.stroke();
 
-      ctx.fillStyle = "#FFFFFF";
-      ctx.font = "bold 20px sans-serif";
-      ctx.fillText(`${totalVolume.toLocaleString("pt-BR")} kg`, margin + 36, y + 34);
+      y += 24;
 
-      ctx.fillStyle = "#94A3B8";
-      ctx.font = "11px sans-serif";
-      ctx.fillText("VOLUME TOTAL", margin + 36, y + 52);
+      // Exercises List Title
+      ctx.fillStyle = "#0F172A";
+      ctx.font = "bold 15px 'Courier New', Courier, monospace";
+      ctx.fillText("EXERCÍCIOS REALIZADOS", margin, y);
 
-      // Box 2 - Séries Concluídas
-      const box2X = margin + 24 + boxW + 16;
-      ctx.fillStyle = "rgba(255, 255, 255, 0.04)";
-      ctx.beginPath();
-      if (typeof ctx.roundRect === "function") {
-        ctx.roundRect(box2X, y, boxW, boxH, 12);
-      } else {
-        ctx.rect(box2X, y, boxW, boxH);
-      }
-      ctx.fill();
-      ctx.stroke();
+      y += 24;
 
-      ctx.fillStyle = "#FFFFFF";
-      ctx.font = "bold 20px sans-serif";
-      ctx.fillText(`${completedSetsCount}`, box2X + 36, y + 34);
-
-      ctx.fillStyle = "#94A3B8";
-      ctx.font = "11px sans-serif";
-      ctx.fillText("SÉRIES CONCLUÍDAS", box2X + 36, y + 52);
-
-      y += boxH + 25;
-
-      // Dashed Line
-      ctx.setLineDash([6, 6]);
-      ctx.beginPath();
-      ctx.moveTo(margin + 24, y);
-      ctx.lineTo(width - margin - 24, y);
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      y += 25;
-
-      // Exercises List Header
-      ctx.fillStyle = "#64748B";
-      ctx.font = "bold 11px sans-serif";
-      ctx.fillText("EXERCÍCIOS REALIZADOS", margin + 24, y);
-
-      y += 20;
-
-      // Exercises Items
+      // Render Exercises with Set Bubbles & Green Checkmarks
       exercises.forEach((ex) => {
-        const doneSets = ex.setsData?.filter(s => s.completed) || [];
-        const maxLoad = Math.max(...doneSets.map(s => parseFloat(s.load) || 0), 0);
+        ctx.fillStyle = "#0F172A";
+        ctx.font = "bold 14px 'Courier New', Courier, monospace";
+        ctx.fillText(ex.name, margin, y);
 
-        ctx.fillStyle = "#FFFFFF";
-        ctx.font = "bold 14px sans-serif";
-        ctx.fillText(ex.name, margin + 24, y);
+        y += 20;
 
-        ctx.fillStyle = "#94A3B8";
-        ctx.font = "12px sans-serif";
-        const metaStr = `${doneSets.length} séries ${maxLoad > 0 ? `• máx ${maxLoad}kg` : ""}`;
-        ctx.fillText(metaStr, margin + 24, y + 16);
+        const sets = ex.setsData || [];
+        let curX = margin;
 
-        ctx.fillStyle = "#ADFF2F";
-        ctx.font = "bold 16px sans-serif";
-        ctx.fillText("✓", width - margin - 36, y + 10);
+        sets.forEach((set, sIdx) => {
+          // Set bubble box dimensions
+          const bubbleW = 145;
+          const bubbleH = 26;
 
-        y += exRowHeight;
+          if (curX + bubbleW > width - margin) {
+            curX = margin;
+            y += 30;
+          }
+
+          // Draw set bubble background
+          ctx.fillStyle = set.completed ? "#1E293B" : "#475569";
+          ctx.beginPath();
+          if (typeof ctx.roundRect === "function") {
+            ctx.roundRect(curX, y - 18, bubbleW, bubbleH, 4);
+          } else {
+            ctx.rect(curX, y - 18, bubbleW, bubbleH);
+          }
+          ctx.fill();
+
+          // Set text
+          ctx.font = "12px sans-serif";
+          ctx.fillStyle = "#94A3B8";
+          ctx.fillText(`${set.setNum || sIdx + 1}ª`, curX + 6, y - 1);
+
+          ctx.fillStyle = "#FFFFFF";
+          ctx.font = "bold 12px sans-serif";
+          const valStr = `${set.load ? set.load + 'kg' : '--'} × ${set.reps || 0}`;
+          ctx.fillText(valStr, curX + 24, y - 1);
+
+          // Green checkmark (v em verde no comprovante!)
+          if (set.completed) {
+            ctx.fillStyle = "#22c55e"; // VERDE
+            ctx.font = "bold 14px sans-serif";
+            ctx.fillText("✓", curX + bubbleW - 16, y - 1);
+          } else {
+            ctx.fillStyle = "#ef4444"; // VERMELHO
+            ctx.font = "bold 14px sans-serif";
+            ctx.fillText("✗", curX + bubbleW - 16, y - 1);
+          }
+
+          curX += bubbleW + 8;
+        });
+
+        y += 32;
       });
 
-      y += 5;
+      y += 6;
 
       // Dashed Line
-      ctx.setLineDash([6, 6]);
+      ctx.strokeStyle = "#64748B";
+      ctx.lineWidth = 1;
+      ctx.setLineDash([5, 5]);
       ctx.beginPath();
-      ctx.moveTo(margin + 24, y);
-      ctx.lineTo(width - margin - 24, y);
+      ctx.moveTo(margin, y);
+      ctx.lineTo(width - margin, y);
       ctx.stroke();
       ctx.setLineDash([]);
 
-      y += 25;
+      y += 22;
 
-      // Auth Code & Footer Tagline
-      ctx.fillStyle = "#64748B";
-      ctx.font = "12px monospace";
+      // Summary & Stamp Row
+      ctx.fillStyle = "#0F172A";
+      ctx.font = "bold 13px 'Courier New', Courier, monospace";
+      ctx.fillText(`TOTAL DE SÉRIES: ${completedSetsCount}`, margin, y);
+
+      ctx.fillStyle = "#15803d";
+      ctx.textAlign = "right";
+      ctx.fillText("TÁ PAGO ✓", width - margin, y);
+
+      y += 16;
+
+      // Double Line
+      ctx.strokeStyle = "#0F172A";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(margin, y);
+      ctx.lineTo(width - margin, y);
+      ctx.stroke();
+
+      y += 24;
+
+      // Simulated Barcode
       ctx.textAlign = "center";
+      ctx.fillStyle = "#0F172A";
+      ctx.font = "bold 18px 'Courier New', Courier, monospace";
+      ctx.fillText("||||| |||| |||||| ||| ||||||| |||| ||||||", width / 2, y);
+
+      y += 18;
+      ctx.fillStyle = "#475569";
+      ctx.font = "11px 'Courier New', Courier, monospace";
       ctx.fillText(`AUTENTICAÇÃO: ${authCode}`, width / 2, y);
 
-      ctx.fillStyle = "#94A3B8";
-      ctx.font = "11px sans-serif";
-      ctx.fillText("KademIA PWA • Resiliência & Alta Performance", width / 2, y + 18);
+      y += 18;
+      ctx.fillText("1ª VIA - KADEMIA RESILIÊNCIA & PERFORMANCE", width / 2, y);
 
       // Export to JPEG Blob
       canvas.toBlob(
@@ -275,3 +287,4 @@ export function generateWorkoutReceiptImage(session, profile) {
     }
   });
 }
+
