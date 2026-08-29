@@ -694,21 +694,22 @@ export default function History({ history, onClearHistory, onDeleteWorkout, sync
           height: 28px;
           border-radius: 50%;
           background: rgba(173, 255, 47, 0.12);
-          border: 1px solid rgba(173, 255, 47, 0.3);
-          color: var(--accent-lime);
+          border: 1px solid rgba(173, 255, 47, 0.4);
+          color: #ADFF2F;
           cursor: pointer;
           transition: all 0.2s ease;
         }
 
         .btn-icon-share-discreet:hover {
-          background: var(--accent-lime);
-          color: #000;
-          transform: scale(1.08);
-          box-shadow: 0 2px 8px rgba(173, 255, 47, 0.35);
+          background: rgba(173, 255, 47, 0.22);
+          border-color: #ADFF2F;
+          color: #ADFF2F;
+          transform: scale(1.05);
+          box-shadow: 0 2px 8px rgba(173, 255, 47, 0.2);
         }
 
         .btn-icon-share-discreet:disabled {
-          opacity: 0.5;
+          opacity: 0.4;
           cursor: wait;
         }
 
