@@ -144,7 +144,7 @@ export default function Dashboard({ workoutData, history, onStartWorkout, onSetA
           <FlameIcon size={20} className="stat-icon orange" />
           <div className="stat-info">
             <span className="stat-value">{maxStreak} {maxStreak === 1 ? "dia" : "dias"}</span>
-            <span className="stat-label">Sua Maior Ofensiva</span>
+            <span className="stat-label">Sua Maior Sequência</span>
           </div>
         </div>
       </section>
