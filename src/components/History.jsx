@@ -275,7 +275,7 @@ export default function History({ history, onClearHistory, onDeleteWorkout, sync
                           onClick={() => setSelectedReceiptSession(session)}
                           style={{ margin: 0 }}
                         >
-                          <DownloadIcon size={13} /> Comprovante
+                          <DownloadIcon size={13} /> Salvar / Compartilhar
                         </button>
                       </div>
 
@@ -685,9 +685,16 @@ export default function History({ history, onClearHistory, onDeleteWorkout, sync
           font-weight: 700;
         }
 
-        .set-check-nok {
-          color: var(--status-error);
+        .set-check-ok {
+          color: #4ade80;
           font-weight: bold;
+          margin-left: 3px;
+        }
+
+        .set-check-nok {
+          color: #ef4444;
+          font-weight: bold;
+          margin-left: 3px;
         }
 
         .btn-delete-workout-discreet {

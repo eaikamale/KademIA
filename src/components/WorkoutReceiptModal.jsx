@@ -75,7 +75,7 @@ export default function WorkoutReceiptModal({ session, profile, onClose }) {
           {/* Header */}
           <div className="receipt-header">
             <div className="receipt-brand">
-              <BarbellIcon size={24} className="receipt-logo-icon" />
+              <BarbellIcon size={22} className="receipt-logo-icon" />
               <span className="receipt-brand-title">KADEMIA</span>
             </div>
             <span className="receipt-badge-stamp">TÁ PAGO ✓</span>
@@ -83,61 +83,55 @@ export default function WorkoutReceiptModal({ session, profile, onClose }) {
 
           <div className="receipt-divider-dashed"></div>
 
-          <h3 className="receipt-title">COMPROVANTE DE TREINO</h3>
-          <p className="receipt-subtitle">Registro Oficial de Execução & Cargas</p>
+          {/* Routine Header Row */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: "var(--accent-lime)", color: "#000", fontWeight: "700", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.9rem" }}>
+                {(session.routineId || "A").toString().charAt(0).toUpperCase()}
+              </div>
+              <h4 style={{ margin: 0, fontSize: "1.05rem", fontWeight: "700", color: "#fff" }}>{session.routineName}</h4>
+            </div>
+            <span style={{ fontSize: "0.85rem", color: "var(--color-text-secondary)" }}>{formattedTime}</span>
+          </div>
 
-          {/* Key Details Grid */}
-          <div className="receipt-details-grid">
-            <div className="receipt-detail-item">
-              <span className="r-label">ATLETA</span>
-              <span className="r-val">{athleteName}</span>
+          {/* Summary Badges Row */}
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "16px" }}>
+            <div style={{ padding: "4px 10px", borderRadius: "8px", background: "rgba(255, 255, 255, 0.05)", border: "1px solid var(--border-color)", fontSize: "0.8rem", color: "#e2e8f0", fontWeight: "600" }}>
+              ⏱️ {session.duration || 0} min
             </div>
-            <div className="receipt-detail-item">
-              <span className="r-label">FICHA / ROTINA</span>
-              <span className="r-val highlight">{session.routineName}</span>
+            <div style={{ padding: "4px 10px", borderRadius: "8px", background: "rgba(255, 255, 255, 0.05)", border: "1px solid var(--border-color)", fontSize: "0.8rem", color: "#e2e8f0", fontWeight: "600" }}>
+              Vol: {totalVolume.toLocaleString("pt-BR")} kg
             </div>
-            <div className="receipt-detail-item">
-              <span className="r-label">DATA & HORÁRIO</span>
-              <span className="r-val">{formattedDate} às {formattedTime}</span>
-            </div>
-            <div className="receipt-detail-item">
-              <span className="r-label">DURAÇÃO TOTAL</span>
-              <span className="r-val">{session.duration || 0} minutos</span>
+            <div style={{ padding: "4px 10px", borderRadius: "8px", background: "rgba(173, 255, 47, 0.15)", border: "1px solid var(--accent-lime)", fontSize: "0.8rem", color: "var(--accent-lime)", fontWeight: "700" }}>
+              Séries: {completedSetsCount}/{session.exercises?.reduce((a, e) => a + (e.setsData?.length || 0), 0) || 0}
             </div>
           </div>
 
           <div className="receipt-divider-dashed"></div>
 
-          {/* High-Impact Stats Row */}
-          <div className="receipt-stats-row">
-            <div className="r-stat-box">
-              <span className="r-stat-num">{totalVolume.toLocaleString("pt-BR")} <small>kg</small></span>
-              <span className="r-stat-label">Volume Total</span>
-            </div>
-            <div className="r-stat-box">
-              <span className="r-stat-num">{completedSetsCount}</span>
-              <span className="r-stat-label">Séries Concluídas</span>
-            </div>
-          </div>
-
-          <div className="receipt-divider-dashed"></div>
-
-          {/* Exercise Breakdown List */}
-          <div className="receipt-exercises-breakdown">
-            <span className="r-label" style={{ marginBottom: "8px", display: "block" }}>EXERCÍCIOS REALIZADOS</span>
-            {session.exercises?.map((ex, idx) => {
-              const doneSets = ex.setsData?.filter(s => s.completed) || [];
-              const maxLoad = Math.max(...doneSets.map(s => parseFloat(s.load) || 0), 0);
-              return (
-                <div key={idx} className="r-exercise-row">
-                  <div className="r-ex-info">
-                    <span className="r-ex-name">{ex.name}</span>
-                    <span className="r-ex-meta">{doneSets.length} séries {maxLoad > 0 ? `• máx ${maxLoad}kg` : ""}</span>
-                  </div>
-                  <span className="r-ex-check">✓</span>
+          {/* Exercise List with Set Bubbles */}
+          <div className="receipt-exercises-breakdown" style={{ textAlign: "left" }}>
+            <h5 className="details-title" style={{ fontSize: "0.9rem", color: "#fff", marginBottom: "12px" }}>Exercícios Realizados</h5>
+            {session.exercises?.map((ex, idx) => (
+              <div key={idx} className="details-ex-item" style={{ marginBottom: "14px" }}>
+                <span className="details-ex-name" style={{ fontSize: "0.9rem", fontWeight: "700", color: "#f1f5f9", display: "block", marginBottom: "6px" }}>{ex.name}</span>
+                <div className="details-sets-list" style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                  {ex.setsData?.map((set, setIdx) => (
+                    <div key={setIdx} className={`details-set-bubble ${set.completed ? "ok" : "nok"}`} style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "4px 8px", borderRadius: "6px", background: "rgba(255, 255, 255, 0.05)", border: "1px solid rgba(255, 255, 255, 0.12)", fontSize: "0.78rem" }}>
+                      <span className="set-num" style={{ color: "var(--color-text-muted)", fontWeight: "600" }}>{set.setNum || (setIdx + 1)}ª</span>
+                      <span className="set-val" style={{ color: "#fff", fontWeight: "700" }}>
+                        {set.load ? `${set.load}kg` : "--"} × {set.reps || "0"}
+                      </span>
+                      {set.completed ? (
+                        <span style={{ color: "#4ade80", fontWeight: "bold", marginLeft: "2px" }}>✓</span>
+                      ) : (
+                        <span style={{ color: "#ef4444", fontWeight: "bold", marginLeft: "2px" }}>✕</span>
+                      )}
+                    </div>
+                  ))}
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
 
           <div className="receipt-divider-dashed"></div>
