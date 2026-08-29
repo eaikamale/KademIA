@@ -1,20 +1,22 @@
 /**
  * Gera uma imagem PNG transparente de alta definição do Comprovante de Treino KademIA
  * replicando exatamente o cartão de treino com as bolhas de séries (✓ verde / ✕ vermelho),
- * cabeçalho KADEMIA + TÁ PAGO ✓, resumo de séries concluídas e bordas serrilhadas.
+ * cabeçalho KADEMIA + TÁ PAGO ✓, nome do atleta, data formatada, resumo de séries concluídas
+ * e bordas serrilhadas sem espaço em branco sobressalente.
  */
 export function generateWorkoutReceiptImage(session, profile) {
   return new Promise((resolve, reject) => {
     try {
-      const athleteName = profile?.name || "Wagner";
+      const athleteName = profile?.name || session.userName || "Wagner";
       const routineName = session.routineName || "Treino";
       const routineId = session.routineId ? String(session.routineId).toUpperCase() : "A";
       const dateObj = new Date(session.date || Date.now());
       
       const formattedDate = dateObj.toLocaleDateString("pt-BR", {
-        weekday: "long",
+        weekday: "short",
         day: "2-digit",
-        month: "long"
+        month: "long",
+        year: "numeric"
       });
       const formattedTime = dateObj.toLocaleTimeString("pt-BR", {
         hour: "2-digit",
@@ -33,27 +35,63 @@ export function generateWorkoutReceiptImage(session, profile) {
         return acc + (ex.setsData?.filter(s => s.completed).length || 0);
       }, 0) || 0;
 
-      const authCode = `#KDM-${dateObj.getTime().toString(36).toUpperCase()}`;
       const exercises = session.exercises || [];
 
-      // Canvas dimensions calculations (HD 2x resolution)
+      // Canvas dimensions setup (HD 2x resolution)
       const width = 640;
       const marginX = 28;
       const marginY = 24;
       const cardW = width - marginX * 2;
-      const innerW = cardW - 48; // usable width inside card padding
 
-      // Calculate dynamic height based on exercises and set bubbles
-      let exercisesHeight = 40; // Title "Exercícios Realizados"
+      // Pass 1: Measure exact content height needed dynamically to avoid excess blank space
+      const dummyCanvas = document.createElement("canvas");
+      const dCtx = dummyCanvas.getContext("2d");
+      if (!dCtx) {
+        reject(new Error("Não foi possível inicializar o contexto 2D do Canvas."));
+        return;
+      }
+      dCtx.font = "bold 12px sans-serif";
+
+      let contentH = 0;
+      contentH += 36; // Header (KADEMIA logo + TÁ PAGO badge)
+      contentH += 24; // Divider
+      contentH += 32; // Routine Name & Badge line
+      contentH += 22; // Athlete Name & Date line
+      contentH += 38; // Summary Badges Row (Duration | Volume | Séries)
+      contentH += 24; // Divider
+      contentH += 28; // Title "Exercícios Realizados"
+
       exercises.forEach((ex) => {
-        exercisesHeight += 28; // Exercise name line
+        contentH += 28; // Exercise Name
         const sets = ex.setsData || [];
-        // Approximate rows of set bubbles (approx 4 bubbles per row)
-        const rows = Math.max(1, Math.ceil(sets.length / 4));
-        exercisesHeight += rows * 36 + 12; // Set bubbles height + bottom margin
+        let currBubbleX = marginX + 24;
+        let bubbleRows = 1;
+
+        sets.forEach((set, sIdx) => {
+          const loadStr = set.load ? `${set.load}kg` : "--";
+          const repsStr = set.reps || "0";
+          const numStr = `${set.setNum || (sIdx + 1)}ª `;
+          const valStr = `${loadStr} × ${repsStr} `;
+          const numW = dCtx.measureText(numStr).width;
+          const valW = dCtx.measureText(valStr).width;
+          const symW = dCtx.measureText("✓").width;
+          const bubbleW = numW + valW + symW + 20;
+
+          if (currBubbleX + bubbleW > width - marginX - 24 && currBubbleX > marginX + 24) {
+            currBubbleX = marginX + 24;
+            bubbleRows++;
+          }
+          currBubbleX += bubbleW + 8;
+        });
+
+        contentH += bubbleRows * 34 + 10;
       });
 
-      const height = marginY * 2 + 320 + exercisesHeight;
+      contentH += 20; // Bottom inner padding after exercises
+
+      const cardYTop = marginY + 12;
+      const cardYBottom = cardYTop + contentH;
+      const height = cardYBottom + marginY + 16;
 
       const canvas = document.createElement("canvas");
       canvas.width = width;
@@ -68,8 +106,6 @@ export function generateWorkoutReceiptImage(session, profile) {
       // Ensure outer background is completely transparent PNG
       ctx.clearRect(0, 0, width, height);
 
-      const cardYTop = marginY + 12;
-      const cardYBottom = height - marginY - 12;
       const toothWidth = 14;
       const toothHeight = 10;
 
@@ -183,7 +219,6 @@ export function generateWorkoutReceiptImage(session, profile) {
       y += 28;
 
       // Routine Header Row: Routine ID Badge + Routine Name + Time
-      // Routine ID Letter Circle Badge
       const badgeX = marginX + 24;
       const badgeY = y - 14;
       const badgeR = 14;
@@ -204,13 +239,21 @@ export function generateWorkoutReceiptImage(session, profile) {
       ctx.textAlign = "left";
       ctx.fillText(routineName, badgeX + badgeR * 2 + 12, y + 4);
 
-      // Time (e.g. 19:38)
-      ctx.fillStyle = "#64748B";
+      // Time (e.g. 20:07)
+      ctx.fillStyle = "#94A3B8";
       ctx.font = "14px sans-serif";
       ctx.textAlign = "right";
       ctx.fillText(formattedTime, width - marginX - 24, y + 4);
 
-      y += 36;
+      y += 24;
+
+      // Athlete Name & Formatted Date Line (e.g. "Atleta: Wagner • sex., 28 de agosto de 2026")
+      ctx.fillStyle = "#CBD5E1";
+      ctx.font = "13px sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText(`Atleta: ${athleteName} • ${formattedDate}`, marginX + 24, y + 6);
+
+      y += 32;
 
       // Summary Badges Row (Duration | Volume | Séries Concluídas)
       ctx.textAlign = "left";
@@ -322,31 +365,8 @@ export function generateWorkoutReceiptImage(session, profile) {
           currBubbleX += bubbleW + 8;
         });
 
-        y += 40;
+        y += 38;
       });
-
-      y += 10;
-
-      // Dashed Line Separator
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.12)";
-      ctx.setLineDash([6, 6]);
-      ctx.beginPath();
-      ctx.moveTo(marginX + 24, y);
-      ctx.lineTo(width - marginX - 24, y);
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      y += 24;
-
-      // Footer Auth Code & Tagline
-      ctx.fillStyle = "#64748B";
-      ctx.font = "12px monospace";
-      ctx.textAlign = "center";
-      ctx.fillText(`AUTENTICAÇÃO: ${authCode}`, width / 2, y);
-
-      ctx.fillStyle = "#94A3B8";
-      ctx.font = "11px sans-serif";
-      ctx.fillText("KademIA PWA • Resiliência & Alta Performance", width / 2, y + 18);
 
       // Export as PNG Blob with transparent background
       canvas.toBlob(

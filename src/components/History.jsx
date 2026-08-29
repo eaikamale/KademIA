@@ -304,7 +304,7 @@ export default function History({ history, onClearHistory, onDeleteWorkout, sync
                       <div className="receipt-divider-dashed" style={{ margin: "10px 0 14px 0" }}></div>
 
                       {/* Routine Info Row: ID Badge + Routine Name + Time */}
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                           <span className="hist-routine-tag">{(session.routineId || "A").toString().charAt(0).toUpperCase()}</span>
                           <h4 className="hist-routine-name" style={{ margin: 0 }}>
@@ -314,6 +314,11 @@ export default function History({ history, onClearHistory, onDeleteWorkout, sync
                         <span className="hist-time-tag">
                           {formatSessionTime(session.date)}
                         </span>
+                      </div>
+
+                      {/* Athlete Name & Formatted Date */}
+                      <div style={{ fontSize: "0.8rem", color: "var(--color-text-secondary)", marginBottom: "12px", paddingLeft: "2px" }}>
+                        Atleta: <strong>{profile?.name || session.userName || "Wagner"}</strong> • {new Date(session.date || Date.now()).toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "long", year: "numeric" })}
                       </div>
 
                       {/* Summary Badges Row */}
@@ -366,12 +371,8 @@ export default function History({ history, onClearHistory, onDeleteWorkout, sync
                         </div>
                       </div>
 
-                      {/* Footer Row: Auth Code (left) | Lixeira (bottom right) */}
-                      <div className="receipt-divider-dashed" style={{ margin: "14px 0 10px 0" }}></div>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ fontSize: "0.72rem", color: "var(--color-text-muted)", fontFamily: "monospace" }}>
-                          AUTENTICAÇÃO: #KDM-{new Date(session.date || Date.now()).getTime().toString(36).toUpperCase()}
-                        </span>
+                      {/* Footer Row: Lixeira on Bottom Right */}
+                      <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", marginTop: "8px" }}>
                         <button
                           type="button"
                           className="btn-delete-workout-discreet"
