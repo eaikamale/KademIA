@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { TrashIcon, CalendarIcon, ClockIcon, InfoIcon, CheckIcon, DownloadIcon, BarbellIcon } from "./Icons";
+import { TrashIcon, CalendarIcon, ClockIcon, InfoIcon, CheckIcon, DownloadIcon, BarbellIcon, Share2Icon } from "./Icons";
 import { generateWorkoutReceiptImage } from "../utils/receiptGenerator";
 import WorkoutReceiptModal from "./WorkoutReceiptModal";
 
@@ -286,15 +286,16 @@ export default function History({ history, onClearHistory, onDeleteWorkout, sync
                           
                           <button
                             type="button"
-                            className="btn-save-share-header"
+                            className="btn-icon-share-discreet"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleDirectSharePNG(session);
                             }}
                             disabled={isSharingId === session.id}
+                            title="Salvar / Compartilhar PNG"
+                            aria-label="Salvar / Compartilhar PNG"
                           >
-                            <DownloadIcon size={13} />
-                            {isSharingId === session.id ? "Gerando PNG..." : "Salvar / Compartilhar"}
+                            <Share2Icon size={14} />
                           </button>
                         </div>
 
@@ -680,30 +681,29 @@ export default function History({ history, onClearHistory, onDeleteWorkout, sync
           font-weight: 600;
         }
 
-        .btn-save-share-header {
+        .btn-icon-share-discreet {
           display: inline-flex;
           align-items: center;
-          gap: 6px;
-          padding: 4px 12px;
-          background: var(--accent-lime);
-          color: #000;
-          font-family: var(--font-body);
-          font-size: 0.78rem;
-          font-weight: 700;
-          border: 1px solid var(--accent-lime);
-          border-radius: 20px;
+          justify-content: center;
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          background: rgba(173, 255, 47, 0.12);
+          border: 1px solid rgba(173, 255, 47, 0.3);
+          color: var(--accent-lime);
           cursor: pointer;
           transition: all 0.2s ease;
-          box-shadow: 0 2px 8px rgba(173, 255, 47, 0.2);
         }
 
-        .btn-save-share-header:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(173, 255, 47, 0.35);
+        .btn-icon-share-discreet:hover {
+          background: var(--accent-lime);
+          color: #000;
+          transform: scale(1.08);
+          box-shadow: 0 2px 8px rgba(173, 255, 47, 0.35);
         }
 
-        .btn-save-share-header:disabled {
-          opacity: 0.6;
+        .btn-icon-share-discreet:disabled {
+          opacity: 0.5;
           cursor: wait;
         }
 

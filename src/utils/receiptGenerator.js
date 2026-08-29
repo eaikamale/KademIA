@@ -112,13 +112,41 @@ export function generateWorkoutReceiptImage(session, profile) {
       ctx.lineWidth = 2;
       ctx.stroke();
 
+      // Helper to draw Dumbbell Barbell SVG Icon directly onto Canvas
+      const drawBarbellIcon = (ctx, x, y, size = 24, color = "#ADFF2F") => {
+        ctx.save();
+        ctx.fillStyle = color;
+        const s = size / 24;
+        ctx.translate(x, y);
+        ctx.scale(s, s);
+        
+        ctx.beginPath();
+        if (typeof ctx.roundRect === "function") {
+          ctx.roundRect(2, 9, 2, 6, 1);
+          ctx.roundRect(5, 6, 3, 12, 1.5);
+          ctx.roundRect(8, 10.5, 8, 3, 1);
+          ctx.roundRect(16, 6, 3, 12, 1.5);
+          ctx.roundRect(20, 9, 2, 6, 1);
+        } else {
+          ctx.rect(2, 9, 2, 6);
+          ctx.rect(5, 6, 3, 12);
+          ctx.rect(8, 10.5, 8, 3);
+          ctx.rect(16, 6, 3, 12);
+          ctx.rect(20, 9, 2, 6);
+        }
+        ctx.fill();
+        ctx.restore();
+      };
+
       let y = cardYTop + 36;
 
-      // Header: Brand Title KADEMIA
+      // Header: Brand Logo & Title KADEMIA
+      drawBarbellIcon(ctx, marginX + 24, y - 20, 22, "#ADFF2F");
+
       ctx.fillStyle = "#ADFF2F";
       ctx.font = "bold 24px sans-serif";
       ctx.textAlign = "left";
-      ctx.fillText("KADEMIA", marginX + 24, y);
+      ctx.fillText("KADEMIA", marginX + 24 + 30, y);
 
       // Stamp Badge "TÁ PAGO ✓"
       const stampText = "TÁ PAGO ✓";
