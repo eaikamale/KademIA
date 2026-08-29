@@ -134,14 +134,14 @@ export default function Dashboard({ workoutData, history, onStartWorkout, onSetA
       {/* Stats Summary Card */}
       <section className="stats-row">
         <div className="stat-card glass">
-          <HistoryIcon size={20} className="stat-icon purple" />
+          <HistoryIcon size={28} className="stat-icon purple" />
           <div className="stat-info">
             <span className="stat-value">{lastWorkout}</span>
             <span className="stat-label">Último Treino</span>
           </div>
         </div>
         <div className="stat-card glass">
-          <FlameIcon size={20} className="stat-icon orange" />
+          <FlameIcon size={28} className="stat-icon orange" />
           <div className="stat-info">
             <span className="stat-value">{maxStreak} {maxStreak === 1 ? "dia" : "dias"}</span>
             <span className="stat-label">Sua Maior Sequência</span>
@@ -308,8 +308,14 @@ export default function Dashboard({ workoutData, history, onStartWorkout, onSetA
         }
 
         .stat-icon {
+          width: 44px;
+          height: 44px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
           padding: 8px;
-          border-radius: 10px;
+          border-radius: 12px;
           background: var(--bg-primary);
         }
 
