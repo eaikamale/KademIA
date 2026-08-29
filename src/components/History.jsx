@@ -276,14 +276,15 @@ export default function History({ history, onClearHistory, onDeleteWorkout, sync
 
                   return (
                     <div key={session.id || sIdx} className="history-day-card receipt-paper animate-slide-up">
-                      {/* Ticket Header: KADEMIA Brand + Salvar/Compartilhar button + TÁ PAGO Stamp */}
-                      <div className="receipt-header-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px", flexWrap: "wrap", gap: "8px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-                          <div className="receipt-brand" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                            <BarbellIcon size={20} className="receipt-logo-icon" />
-                            <span className="receipt-brand-title" style={{ fontSize: "1.1rem" }}>KADEMIA</span>
-                          </div>
-                          
+                      {/* Ticket Header: KADEMIA Brand (left) | TÁ PAGO Stamp + Share Icon Button (right) */}
+                      <div className="receipt-header-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                        <div className="receipt-brand" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                          <BarbellIcon size={20} className="receipt-logo-icon" />
+                          <span className="receipt-brand-title" style={{ fontSize: "1.1rem" }}>KADEMIA</span>
+                        </div>
+
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <span className="receipt-badge-stamp">TÁ PAGO ✓</span>
                           <button
                             type="button"
                             className="btn-icon-share-discreet"
@@ -296,22 +297,6 @@ export default function History({ history, onClearHistory, onDeleteWorkout, sync
                             aria-label="Salvar / Compartilhar PNG"
                           >
                             <Share2Icon size={14} />
-                          </button>
-                        </div>
-
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <span className="receipt-badge-stamp">TÁ PAGO ✓</span>
-                          <button
-                            type="button"
-                            className="btn-delete-workout-discreet"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSessionToDelete(session);
-                            }}
-                            title="Apagar este treino"
-                            aria-label="Apagar este treino"
-                          >
-                            <TrashIcon size={14} />
                           </button>
                         </div>
                       </div>
@@ -379,6 +364,26 @@ export default function History({ history, onClearHistory, onDeleteWorkout, sync
                             </div>
                           ))}
                         </div>
+                      </div>
+
+                      {/* Footer Row: Auth Code (left) | Lixeira (bottom right) */}
+                      <div className="receipt-divider-dashed" style={{ margin: "14px 0 10px 0" }}></div>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: "0.72rem", color: "var(--color-text-muted)", fontFamily: "monospace" }}>
+                          AUTENTICAÇÃO: #KDM-{new Date(session.date || Date.now()).getTime().toString(36).toUpperCase()}
+                        </span>
+                        <button
+                          type="button"
+                          className="btn-delete-workout-discreet"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSessionToDelete(session);
+                          }}
+                          title="Apagar este treino"
+                          aria-label="Apagar este treino"
+                        >
+                          <TrashIcon size={14} />
+                        </button>
                       </div>
                     </div>
                   );
