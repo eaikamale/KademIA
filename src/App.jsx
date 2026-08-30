@@ -22,14 +22,16 @@ import {
 function deduplicateHistory(historyList) {
   if (!Array.isArray(historyList)) return [];
 
-  const getNormalizedDateKey = (dateStr) => {
-    if (!dateStr) return "";
+  const getNormalizedDateKey = (session) => {
+    if (!session) return "";
+    if (session.id) return String(session.id);
+    if (!session.date) return "";
     try {
-      const d = new Date(dateStr);
+      const d = new Date(session.date);
       d.setMilliseconds(0);
       return d.toISOString();
     } catch (e) {
-      return dateStr;
+      return String(session.date);
     }
   };
 
@@ -37,7 +39,7 @@ function deduplicateHistory(historyList) {
 
   historyList.forEach(session => {
     if (!session) return;
-    const key = getNormalizedDateKey(session.date);
+    const key = getNormalizedDateKey(session) || Math.random().toString();
     
     if (!sessionsMap[key]) {
       sessionsMap[key] = {
@@ -529,7 +531,7 @@ export default function App() {
     }
   };
 
-  // Monitor online/offline status
+  // Monitor online/offline status and window focus for instant multi-device sync
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
@@ -541,12 +543,21 @@ export default function App() {
       setIsOnline(false);
     };
 
+    const handleFocus = () => {
+      if (googleSyncSettings.connected && googleSyncSettings.uid) {
+        console.log("🔄 Foco na janela: Verificando sincronização com a nuvem...");
+        handleSync();
+      }
+    };
+
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
+    window.addEventListener("focus", handleFocus);
 
     return () => {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
+      window.removeEventListener("focus", handleFocus);
     };
   }, [googleSyncSettings.connected, googleSyncSettings.uid]);
 
