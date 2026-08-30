@@ -924,12 +924,26 @@ export default function App() {
 
   // Render navigation tab contents
   const renderTabContent = () => {
-    const syncProps = googleSyncSettings.connected ? {
+    const syncProps = {
+      connected: !!googleSyncSettings.connected,
+      email: googleSyncSettings.email || "",
       status: syncStatus,
       lastSync: lastSyncTime,
       isOnline,
-      onSync: handleSync
-    } : null;
+      onSync: handleSync,
+      onConnectGoogle: async () => {
+        try {
+          const res = await loginWithGoogle();
+          if (res.success && res.user) {
+            // Auth listener will merge and sync data automatically
+          } else if (res.error) {
+            alert("Erro no login Google: " + res.error);
+          }
+        } catch (err) {
+          alert("Erro na conexão: " + err.message);
+        }
+      }
+    };
 
     switch (activeTab) {
       case "dashboard":

@@ -109,7 +109,7 @@ export default function Dashboard({ workoutData, history, onStartWorkout, onSetA
           <h2 className="user-name">{profile?.name || "Wagner"}!</h2>
         </div>
         <div className="header-actions" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          {syncProps?.onSync && (
+          {syncProps?.connected ? (
             <button
               type="button"
               className="btn-dash-sync"
@@ -131,6 +131,29 @@ export default function Dashboard({ workoutData, history, onStartWorkout, onSetA
               }}
             >
               🔄 Sincronizar
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="btn-dash-sync"
+              onClick={syncProps?.onConnectGoogle}
+              title="Entrar com o Google para sincronizar"
+              aria-label="Entrar com o Google para sincronizar"
+              style={{
+                display: "inline-flex",
+                align-items: "center",
+                gap: "4px",
+                padding: "6px 10px",
+                borderRadius: "20px",
+                background: "rgba(173, 255, 47, 0.18)",
+                border: "1px solid rgba(173, 255, 47, 0.5)",
+                color: "#ADFF2F",
+                fontSize: "0.75rem",
+                fontWeight: "600",
+                cursor: "pointer"
+              }}
+            >
+              ☁️ Entrar c/ Google
             </button>
           )}
           <div className="streak-badge glass">
@@ -155,26 +178,28 @@ export default function Dashboard({ workoutData, history, onStartWorkout, onSetA
           fontSize: "0.82rem",
           color: "var(--color-text-secondary)"
         }}>
-          <span>☁️ Sem histórico? Conecte a mesma conta Google no Notebook e toque aqui.</span>
-          {syncProps?.onSync && (
-            <button
-              type="button"
-              onClick={syncProps.onSync}
-              style={{
-                background: "var(--accent-lime)",
-                color: "#000",
-                border: "none",
-                borderRadius: "8px",
-                padding: "6px 12px",
-                fontWeight: "700",
-                fontSize: "0.78rem",
-                cursor: "pointer",
-                whiteSpace: "nowrap"
-              }}
-            >
-              Baixar Dados
-            </button>
-          )}
+          <span>
+            {syncProps?.connected 
+              ? `☁️ Conectado como ${syncProps.email || "Google"}. Toque ao lado para buscar seus treinos do Notebook.`
+              : "☁️ Sem histórico exibido? Entre com a sua conta Google para resgatar os treinos do Notebook."}
+          </span>
+          <button
+            type="button"
+            onClick={syncProps?.connected ? syncProps.onSync : syncProps?.onConnectGoogle}
+            style={{
+              background: "var(--accent-lime)",
+              color: "#000",
+              border: "none",
+              borderRadius: "8px",
+              padding: "6px 12px",
+              fontWeight: "700",
+              fontSize: "0.78rem",
+              cursor: "pointer",
+              whiteSpace: "nowrap"
+            }}
+          >
+            {syncProps?.connected ? "Baixar Dados" : "Entrar c/ Google"}
+          </button>
         </div>
       )}
 
