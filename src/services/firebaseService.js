@@ -116,12 +116,13 @@ export async function saveUserDataToFirestore(userId, { workoutData, history, pr
       fittrack_history: deleteField()
     };
 
-    if (workoutData !== undefined) payload.workoutData = workoutData;
-    if (history !== undefined) payload.history = history;
-    if (profile !== undefined) payload.profile = profile;
-    if (profileHistory !== undefined) payload.profileHistory = profileHistory;
+    if (workoutData !== undefined) payload.workoutData = JSON.parse(JSON.stringify(workoutData));
+    if (history !== undefined) payload.history = JSON.parse(JSON.stringify(history));
+    if (profile !== undefined) payload.profile = JSON.parse(JSON.stringify(profile));
+    if (profileHistory !== undefined) payload.profileHistory = JSON.parse(JSON.stringify(profileHistory));
 
     await setDoc(userDocRef, payload, { merge: true });
+    console.log("🔥 Dados sincronizados com sucesso no Firestore para o usuário:", userId);
     return { success: true };
   } catch (error) {
     console.error("Erro ao salvar no Firestore:", error);

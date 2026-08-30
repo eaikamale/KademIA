@@ -390,27 +390,50 @@ export default function App() {
         try {
           const remoteData = await fetchUserDataFromFirestore(user.uid);
           
-          const localHist = latestDataRef.current.history || [];
+          let localHist = latestDataRef.current.history || [];
+          let localProfHist = latestDataRef.current.profileHistory || [];
+          let localProf = latestDataRef.current.profile || {};
+          let localWd = latestDataRef.current.workoutData || defaultWorkout;
+
+          // Fallback to localStorage directly if latestDataRef is empty
+          try {
+            const h = localStorage.getItem("kademia_history");
+            if (h) localHist = mergeHistory(localHist, JSON.parse(h));
+          } catch(e) {}
+
+          try {
+            const ph = localStorage.getItem("kademia_profile_history");
+            if (ph) localProfHist = mergeProfileHistory(localProfHist, JSON.parse(ph));
+          } catch(e) {}
+
+          try {
+            const p = localStorage.getItem("kademia_profile");
+            if (p) localProf = { ...localProf, ...JSON.parse(p) };
+          } catch(e) {}
+
+          try {
+            const wd = localStorage.getItem("kademia_workout_data");
+            if (wd) localWd = sanitizeWorkoutData(JSON.parse(wd));
+          } catch(e) {}
+
           const remoteHist = remoteData?.history || [];
           const mergedHist = mergeHistory(localHist, remoteHist);
 
-          const localProfHist = latestDataRef.current.profileHistory || [];
           const remoteProfHist = remoteData?.profileHistory || [];
           const mergedProfHist = mergeProfileHistory(localProfHist, remoteProfHist);
 
-          const localProf = latestDataRef.current.profile || {};
           const remoteProf = remoteData?.profile || {};
           const mergedProf = { ...localProf, ...remoteProf };
 
-          const finalWorkoutData = remoteData?.workoutData ? sanitizeWorkoutData(remoteData.workoutData) : latestDataRef.current.workoutData;
+          const finalWorkoutData = remoteData?.workoutData ? sanitizeWorkoutData(remoteData.workoutData) : sanitizeWorkoutData(localWd);
 
-          // Update local states
+          // Update React states immediately
           setHistory(mergedHist);
           setProfileHistory(mergedProfHist);
           setProfile(mergedProf);
           setWorkoutData(finalWorkoutData);
 
-          // Update localStorage
+          // Update localStorage immediately
           localStorage.setItem("kademia_history", JSON.stringify(mergedHist));
           localStorage.setItem("kademia_profile_history", JSON.stringify(mergedProfHist));
           localStorage.setItem("kademia_profile", JSON.stringify(mergedProf));
@@ -423,6 +446,8 @@ export default function App() {
             profile: mergedProf,
             profileHistory: mergedProfHist
           });
+
+          console.log(`✅ Sincronização automática de login concluída! ${mergedHist.length} treinos no histórico e ${mergedProfHist.length} pesagens ativas.`);
         } catch (err) {
           console.error("Erro ao sincronizar Firestore ao autenticar:", err);
         }
