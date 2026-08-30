@@ -108,13 +108,75 @@ export default function Dashboard({ workoutData, history, onStartWorkout, onSetA
           <span className="welcome-text">Bora treinar,</span>
           <h2 className="user-name">{profile?.name || "Wagner"}!</h2>
         </div>
-        <div className="header-actions">
+        <div className="header-actions" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          {syncProps?.onSync && (
+            <button
+              type="button"
+              className="btn-dash-sync"
+              onClick={syncProps.onSync}
+              title="Sincronizar com a nuvem"
+              aria-label="Sincronizar com a nuvem"
+              style={{
+                display: "inline-flex",
+                align-items: "center",
+                gap: "4px",
+                padding: "6px 10px",
+                borderRadius: "20px",
+                background: "rgba(173, 255, 47, 0.12)",
+                border: "1px solid rgba(173, 255, 47, 0.3)",
+                color: "#ADFF2F",
+                fontSize: "0.75rem",
+                fontWeight: "600",
+                cursor: "pointer"
+              }}
+            >
+              🔄 Sincronizar
+            </button>
+          )}
           <div className="streak-badge glass">
             <TrophyIcon size={18} className="badge-icon" />
             <span><strong>{totalWorkouts}</strong> treinos</span>
           </div>
         </div>
       </header>
+
+      {/* Sync Helper Banner if 0 workouts displayed */}
+      {totalWorkouts === 0 && (
+        <div style={{
+          background: "rgba(173, 255, 47, 0.08)",
+          border: "1px solid rgba(173, 255, 47, 0.2)",
+          borderRadius: "12px",
+          padding: "10px 14px",
+          marginBottom: "16px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: "10px",
+          fontSize: "0.82rem",
+          color: "var(--color-text-secondary)"
+        }}>
+          <span>☁️ Sem histórico? Conecte a mesma conta Google no Notebook e toque aqui.</span>
+          {syncProps?.onSync && (
+            <button
+              type="button"
+              onClick={syncProps.onSync}
+              style={{
+                background: "var(--accent-lime)",
+                color: "#000",
+                border: "none",
+                borderRadius: "8px",
+                padding: "6px 12px",
+                fontWeight: "700",
+                fontSize: "0.78rem",
+                cursor: "pointer",
+                whiteSpace: "nowrap"
+              }}
+            >
+              Baixar Dados
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Weekly Progress Tracker */}
       <section className="section-container glass">
