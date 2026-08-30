@@ -3,6 +3,8 @@ import {
   getAuth, 
   GoogleAuthProvider, 
   signInWithPopup, 
+  signInWithRedirect,
+  getRedirectResult,
   signOut, 
   onAuthStateChanged 
 } from "firebase/auth";
@@ -24,7 +26,7 @@ export const db = getFirestore(app);
 const googleProvider = new GoogleAuthProvider();
 
 /**
- * Realiza login via Popup com a conta Google (sem solicitar escopos do Drive).
+ * Realiza login via Popup com a conta Google, com fallback automático para Redirect em celulares/PWA.
  */
 export async function loginWithGoogle() {
   try {
@@ -34,12 +36,41 @@ export async function loginWithGoogle() {
       user: result.user
     };
   } catch (error) {
-    console.error("Erro no login do Firebase Google:", error);
+    console.error("Erro no login via Popup Firebase Google:", error);
+    // Se o popup for bloqueado pelo navegador do celular ou PWA, tenta o login via Redirect
+    if (
+      error.code === "auth/popup-blocked" ||
+      error.code === "auth/popup-closed-by-user" ||
+      error.code === "auth/cancelled-popup-request" ||
+      /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+    ) {
+      try {
+        await signInWithRedirect(auth, googleProvider);
+        return { success: true, redirecting: true };
+      } catch (redirectErr) {
+        return { success: false, error: redirectErr.message };
+      }
+    }
     return {
       success: false,
       error: error.message
     };
   }
+}
+
+/**
+ * Verifica o resultado de autenticação via Redirect (após retorno no celular).
+ */
+export async function checkRedirectResult() {
+  try {
+    const result = await getRedirectResult(auth);
+    if (result && result.user) {
+      return { success: true, user: result.user };
+    }
+  } catch (error) {
+    console.error("Erro no checkRedirectResult:", error);
+  }
+  return null;
 }
 
 /**

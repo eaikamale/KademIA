@@ -14,7 +14,8 @@ import {
   subscribeAuthState, 
   saveUserDataToFirestore, 
   fetchUserDataFromFirestore,
-  subscribeUserDataFromFirestore 
+  subscribeUserDataFromFirestore,
+  checkRedirectResult
 } from "./services/firebaseService";
 
 // Helper to deduplicate local history data (both session duplicates and set duplicates)
@@ -371,8 +372,10 @@ export default function App() {
     };
   }, []);
 
-  // Subscribe to Firebase Auth State (Session persistence)
+  // Subscribe to Firebase Auth State (Session persistence & Redirect handler)
   useEffect(() => {
+    checkRedirectResult().catch(err => console.error("Erro no checkRedirectResult:", err));
+
     const unsubscribeAuth = subscribeAuthState(async (user) => {
       if (user) {
         setGoogleSyncSettings({
