@@ -140,6 +140,21 @@ function sanitizeWorkoutData(workoutData) {
   return workoutData;
 }
 
+function pickNewerWorkoutData(localWd, remoteWd) {
+  const sanitizedLocal = sanitizeWorkoutData(localWd);
+  if (!remoteWd) return sanitizedLocal;
+  const sanitizedRemote = sanitizeWorkoutData(remoteWd);
+  if (!localWd) return sanitizedRemote;
+
+  const localTime = sanitizedLocal.lastUpdated ? new Date(sanitizedLocal.lastUpdated).getTime() : 0;
+  const remoteTime = sanitizedRemote.lastUpdated ? new Date(sanitizedRemote.lastUpdated).getTime() : 0;
+
+  if (remoteTime >= localTime) {
+    return sanitizedRemote;
+  }
+  return sanitizedLocal;
+}
+
 export default function App() {
   const [theme, setTheme] = useState(() => {
     const saved = localStorage.getItem("kademia_theme");
@@ -293,6 +308,10 @@ export default function App() {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showExitMessage, setShowExitMessage] = useState(false);
 
+  // Cloud sync hydration and remote locks
+  const isInitialSyncDoneRef = useRef(false);
+  const isSyncingFromRemoteRef = useRef(false);
+
   // Latest state ref for callbacks
   const latestDataRef = useRef({
     googleSyncSettings,
@@ -427,7 +446,9 @@ export default function App() {
           const remoteProf = remoteData?.profile || {};
           const mergedProf = { ...localProf, ...remoteProf };
 
-          const finalWorkoutData = remoteData?.workoutData ? sanitizeWorkoutData(remoteData.workoutData) : sanitizeWorkoutData(localWd);
+          const finalWorkoutData = pickNewerWorkoutData(localWd, remoteData?.workoutData);
+
+          isSyncingFromRemoteRef.current = true;
 
           // Update React states immediately
           setHistory(mergedHist);
@@ -440,6 +461,11 @@ export default function App() {
           localStorage.setItem("kademia_profile_history", JSON.stringify(mergedProfHist));
           localStorage.setItem("kademia_profile", JSON.stringify(mergedProf));
           localStorage.setItem("kademia_workout_data", JSON.stringify(finalWorkoutData));
+
+          isInitialSyncDoneRef.current = true;
+          setTimeout(() => {
+            isSyncingFromRemoteRef.current = false;
+          }, 100);
 
           // Save unified merged payload to Firestore
           await saveUserDataToFirestore(user.uid, {
@@ -468,8 +494,10 @@ export default function App() {
     const unsubscribeDoc = subscribeUserDataFromFirestore(googleSyncSettings.uid, (remoteData) => {
       if (!remoteData) return;
 
+      isSyncingFromRemoteRef.current = true;
+
       if (remoteData.workoutData) {
-        setWorkoutData(sanitizeWorkoutData(remoteData.workoutData));
+        setWorkoutData(prevLocal => pickNewerWorkoutData(prevLocal, remoteData.workoutData));
       }
       if (remoteData.history) {
         setHistory(prevLocal => mergeHistory(prevLocal, remoteData.history));
@@ -481,6 +509,7 @@ export default function App() {
         setProfileHistory(prevLocal => mergeProfileHistory(prevLocal, remoteData.profileHistory));
       }
 
+      isInitialSyncDoneRef.current = true;
       setSyncStatus("synced");
       const timeStr = new Date().toLocaleString("pt-BR", {
         day: "2-digit",
@@ -489,6 +518,10 @@ export default function App() {
         minute: "2-digit"
       });
       setLastSyncTime(timeStr);
+
+      setTimeout(() => {
+        isSyncingFromRemoteRef.current = false;
+      }, 100);
     });
 
     return () => unsubscribeDoc();
@@ -619,13 +652,15 @@ export default function App() {
     };
   }, [hasEnteredApp, googleSyncSettings.connected]);
 
-  // Save state changes to localStorage and debounced sync to Firestore
+  // Save state changes to localStorage and debounced sync to Firestore (only after initial cloud hydration)
   useEffect(() => {
     localStorage.setItem("kademia_workout_data", JSON.stringify(workoutData));
 
-    if (googleSyncSettings.connected && googleSyncSettings.uid) {
+    if (googleSyncSettings.connected && googleSyncSettings.uid && isInitialSyncDoneRef.current && !isSyncingFromRemoteRef.current) {
       const syncDebounce = setTimeout(() => {
-        saveUserDataToFirestore(googleSyncSettings.uid, { workoutData });
+        if (!isSyncingFromRemoteRef.current) {
+          saveUserDataToFirestore(googleSyncSettings.uid, { workoutData });
+        }
       }, 1500);
       return () => clearTimeout(syncDebounce);
     }
@@ -634,9 +669,11 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem("kademia_history", JSON.stringify(history));
 
-    if (googleSyncSettings.connected && googleSyncSettings.uid) {
+    if (googleSyncSettings.connected && googleSyncSettings.uid && isInitialSyncDoneRef.current && !isSyncingFromRemoteRef.current) {
       const syncDebounce = setTimeout(() => {
-        saveUserDataToFirestore(googleSyncSettings.uid, { history });
+        if (!isSyncingFromRemoteRef.current) {
+          saveUserDataToFirestore(googleSyncSettings.uid, { history });
+        }
       }, 1500);
       return () => clearTimeout(syncDebounce);
     }
@@ -645,9 +682,11 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem("kademia_profile", JSON.stringify(profile));
 
-    if (googleSyncSettings.connected && googleSyncSettings.uid) {
+    if (googleSyncSettings.connected && googleSyncSettings.uid && isInitialSyncDoneRef.current && !isSyncingFromRemoteRef.current) {
       const syncDebounce = setTimeout(() => {
-        saveUserDataToFirestore(googleSyncSettings.uid, { profile });
+        if (!isSyncingFromRemoteRef.current) {
+          saveUserDataToFirestore(googleSyncSettings.uid, { profile });
+        }
       }, 1500);
       return () => clearTimeout(syncDebounce);
     }
@@ -656,13 +695,43 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem("kademia_profile_history", JSON.stringify(profileHistory));
 
-    if (googleSyncSettings.connected && googleSyncSettings.uid) {
+    if (googleSyncSettings.connected && googleSyncSettings.uid && isInitialSyncDoneRef.current && !isSyncingFromRemoteRef.current) {
       const syncDebounce = setTimeout(() => {
-        saveUserDataToFirestore(googleSyncSettings.uid, { profileHistory });
+        if (!isSyncingFromRemoteRef.current) {
+          saveUserDataToFirestore(googleSyncSettings.uid, { profileHistory });
+        }
       }, 1500);
       return () => clearTimeout(syncDebounce);
     }
   }, [profileHistory, googleSyncSettings.connected, googleSyncSettings.uid]);
+
+  // Flush pending changes to Firestore when tab unloads or loses visibility
+  useEffect(() => {
+    const handleFlush = () => {
+      if (googleSyncSettings.connected && googleSyncSettings.uid && isInitialSyncDoneRef.current && !isSyncingFromRemoteRef.current) {
+        saveUserDataToFirestore(googleSyncSettings.uid, {
+          workoutData: latestDataRef.current.workoutData,
+          history: latestDataRef.current.history,
+          profile: latestDataRef.current.profile,
+          profileHistory: latestDataRef.current.profileHistory
+        });
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        handleFlush();
+      }
+    };
+
+    window.addEventListener("beforeunload", handleFlush);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleFlush);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [googleSyncSettings.connected, googleSyncSettings.uid]);
 
   useEffect(() => {
     localStorage.setItem("kademia_google_sync", JSON.stringify(googleSyncSettings));
@@ -764,13 +833,21 @@ export default function App() {
   };
 
   const handleUpdateWorkoutData = (newDataOrFn) => {
+    let nextData;
     setWorkoutData((prev) => {
-      const nextData = typeof newDataOrFn === "function" ? newDataOrFn(prev) : newDataOrFn;
-      return {
-        ...nextData,
+      const raw = typeof newDataOrFn === "function" ? newDataOrFn(prev) : newDataOrFn;
+      nextData = {
+        ...raw,
         lastUpdated: new Date().toISOString()
       };
+      return nextData;
     });
+
+    isInitialSyncDoneRef.current = true;
+
+    if (googleSyncSettings.connected && googleSyncSettings.uid) {
+      runSyncTask(() => saveUserDataToFirestore(googleSyncSettings.uid, { workoutData: nextData }));
+    }
   };
 
   const handleResetDefaultWorkout = async () => {
@@ -799,12 +876,18 @@ export default function App() {
       const mergedProfHist = mergeProfileHistory(localProfHist, remoteProfHist);
 
       const mergedProf = { ...(latestDataRef.current.profile || {}), ...(remoteData?.profile || {}) };
-      const finalWorkoutData = latestDataRef.current.workoutData || remoteData?.workoutData || defaultWorkout;
+      const finalWorkoutData = pickNewerWorkoutData(latestDataRef.current.workoutData, remoteData?.workoutData);
 
+      isSyncingFromRemoteRef.current = true;
       setHistory(mergedHist);
       setProfileHistory(mergedProfHist);
       setProfile(mergedProf);
       setWorkoutData(finalWorkoutData);
+      isInitialSyncDoneRef.current = true;
+
+      setTimeout(() => {
+        isSyncingFromRemoteRef.current = false;
+      }, 100);
 
       localStorage.setItem("kademia_history", JSON.stringify(mergedHist));
       localStorage.setItem("kademia_profile_history", JSON.stringify(mergedProfHist));
@@ -885,12 +968,13 @@ export default function App() {
     setWorkoutData(newWorkoutData);
     setActiveWorkoutRoutine(null);
     setActiveTab("dashboard");
+    isInitialSyncDoneRef.current = true;
 
     if (googleSyncSettings.connected && googleSyncSettings.uid) {
-      saveUserDataToFirestore(googleSyncSettings.uid, {
+      await runSyncTask(() => saveUserDataToFirestore(googleSyncSettings.uid, {
         history: updatedHistory,
         workoutData: newWorkoutData
-      });
+      }));
     }
   };
 

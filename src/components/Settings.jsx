@@ -49,7 +49,29 @@ export default function Settings({
   const [isSyncingAll, setIsSyncingAll] = useState(false);
   const [syncError, setSyncError] = useState("");
   const [syncSuccess, setSyncSuccess] = useState(false);
+  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const fileInputRef = useRef(null);
+
+  // Protected clear history handlers requiring explicit "deletar" typing
+  const handleClearProfileHistoryProtected = () => {
+    const input = window.prompt("ATENÇÃO: Esta ação apaga permanentemente todo o seu histórico de pesagens.\n\nPara confirmar a exclusão, digite \"deletar\" abaixo:");
+    if (input && input.trim().toLowerCase() === "deletar") {
+      onClearProfileHistory();
+      alert("Histórico de pesagens apagado com sucesso.");
+    } else if (input !== null) {
+      alert("Exclusão cancelada. A palavra digitada deve ser exatamente \"deletar\".");
+    }
+  };
+
+  const handleClearHistoryProtected = () => {
+    const input = window.prompt("ATENÇÃO: Esta ação apaga permanentemente todo o seu histórico de treinos salvos.\n\nPara confirmar a exclusão, digite \"deletar\" abaixo:");
+    if (input && input.trim().toLowerCase() === "deletar") {
+      onClearHistory();
+      alert("Histórico de treinos apagado com sucesso.");
+    } else if (input !== null) {
+      alert("Exclusão cancelada. A palavra digitada deve ser exatamente \"deletar\".");
+    }
+  };
 
   // Track profile prop changes
   useEffect(() => {
@@ -167,7 +189,7 @@ export default function Settings({
       await onSync();
       setSyncSuccess(true);
       setTimeout(() => setSyncSuccess(false), 4000);
-      alert("Sucesso! Os seus dados foram sincronizados em tempo real com a nuvem Firebase.");
+      alert("Sucesso! Os seus dados foram sincronizados em tempo real com a nuvem.");
     } catch (err) {
       setSyncError("Erro na sincronização: " + err.message);
     } finally {
@@ -331,7 +353,7 @@ export default function Settings({
     <div className="settings-container animate-fade-in">
       <div className="settings-header">
         <h2 className="settings-page-title">Ajustes & Perfil</h2>
-        <p className="settings-page-subtitle">Personalize suas metas, dados biométricos e conexão com a nuvem.</p>
+        <p className="settings-page-subtitle">Personalize suas metas, dados biométricos e conta.</p>
       </div>
 
       {/* 1. User Profile Card */}
@@ -453,10 +475,10 @@ export default function Settings({
         </section>
       )}
 
-      {/* 3. Firebase Cloud Sync Card */}
+      {/* 3. Account & Cloud Sync Card */}
       <section className="settings-section glass">
         <div className="section-header-row">
-          <h3 className="section-title">Sincronização em Nuvem (Firebase)</h3>
+          <h3 className="section-title">Conta & Sincronização</h3>
           {googleSyncSettings.connected ? (
             <span className="badge-status connected">
               <span className="status-dot pulsing"></span> Conectado
@@ -474,7 +496,7 @@ export default function Settings({
         {!googleSyncSettings.connected ? (
           <div className="sync-connect-flow">
             <p className="sync-info-text">
-              Conecte sua conta do Google para salvar e sincronizar automaticamente suas fichas, cargas e histórico de treinos no banco de dados em nuvem.
+              Conecte sua conta do Google para salvar e sincronizar automaticamente suas fichas, cargas e histórico de treinos na nuvem.
             </p>
 
             <button 
@@ -502,7 +524,7 @@ export default function Settings({
               </div>
             </div>
 
-            <div className="sync-actions-grid">
+            <div className="sync-actions-grid" style={{ gridTemplateColumns: "1fr auto" }}>
               <button 
                 type="button" 
                 className="btn btn-lime full-sync-btn"
@@ -510,18 +532,8 @@ export default function Settings({
                 disabled={isSyncingAll}
               >
                 <SyncIcon size={18} className={isSyncingAll ? "spinner-animation" : ""} />
-                {isSyncingAll ? "Sincronizando..." : "Sincronizar Agora com a Nuvem"}
+                {isSyncingAll ? "Sincronizando..." : "Sincronizar Agora"}
               </button>
-
-              {onForcePush && (
-                <button 
-                  type="button" 
-                  className="btn btn-secondary full-sync-btn"
-                  onClick={onForcePush}
-                >
-                  <UploadIcon size={18} /> Enviar Dados Deste Aparelho para a Nuvem
-                </button>
-              )}
 
               <button 
                 type="button" 
@@ -624,78 +636,138 @@ export default function Settings({
         </div>
       </section>
 
-      {/* 5. Backup & File Export/Import (Secundário & Compacto) */}
-      <section className="settings-section glass">
-        <h3 className="section-title">Gerenciamento de Dados & Fichas</h3>
-        <p className="sync-info-text" style={{ marginBottom: "12px", marginTop: "4px" }}>
-          Sincronize ou restaure a versão oficial das fichas no seu aparelho e na nuvem.
-        </p>
+      {/* 5. Collapsible Advanced Section */}
+      <section className="settings-section glass advanced-section">
+        <button 
+          type="button" 
+          className="advanced-toggle-btn"
+          onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
+        >
+          <div className="advanced-title-group">
+            <h3 className="section-title">Avançado</h3>
+            <span className="advanced-subtitle">Backup manual e exclusão de histórico</span>
+          </div>
+          <span className={`advanced-chevron ${isAdvancedOpen ? "open" : ""}`}>
+            {isAdvancedOpen ? "▲" : "▼"}
+          </span>
+        </button>
 
-        {onResetDefaultWorkout && (
-          <button 
-            type="button" 
-            className="btn btn-secondary"
-            onClick={onResetDefaultWorkout}
-            style={{ width: "100%", justifyContent: "center", marginBottom: "12px" }}
-          >
-            <SyncIcon size={16} /> Carregar Ficha ABCD Otimizada (Oficial)
-          </button>
+        {isAdvancedOpen && (
+          <div className="advanced-content animate-slide-up" style={{ marginTop: "16px" }}>
+            {/* Backup JSON Sub-card */}
+            <div className="advanced-subcard">
+              <h4 className="advanced-subcard-title">Backup Local (JSON)</h4>
+              <p className="sync-info-text" style={{ marginBottom: "12px", marginTop: "4px" }}>
+                Exporte ou importe um arquivo de cópia de segurança física dos seus dados.
+              </p>
+
+              <div className="backup-actions-grid" style={{ display: "flex", gap: "8px" }}>
+                <button 
+                  type="button" 
+                  className="btn btn-secondary"
+                  onClick={handleExportJSON}
+                  style={{ justifyContent: "center", fontSize: "0.8rem", padding: "8px 12px", flex: 1 }}
+                >
+                  <DownloadIcon size={14} /> Exportar JSON
+                </button>
+
+                <button 
+                  type="button" 
+                  className="btn btn-secondary"
+                  onClick={() => fileInputRef.current?.click()}
+                  style={{ justifyContent: "center", fontSize: "0.8rem", padding: "8px 12px", flex: 1 }}
+                >
+                  <UploadIcon size={14} /> Importar JSON
+                </button>
+
+                <input 
+                  type="file"
+                  accept=".json"
+                  ref={fileInputRef}
+                  onChange={handleFileImport}
+                  style={{ display: "none" }}
+                />
+              </div>
+            </div>
+
+            {/* Danger Zone Sub-card */}
+            <div className="advanced-subcard danger-zone-subcard" style={{ marginTop: "20px" }}>
+              <h4 className="advanced-subcard-title text-danger">Zona de Perigo</h4>
+              <p className="sync-info-text" style={{ marginBottom: "14px", marginTop: "6px" }}>
+                Exclusão irreversível de dados. Requer digitação da palavra <strong>deletar</strong>.
+              </p>
+
+              <div className="danger-actions-column" style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                <button 
+                  type="button" 
+                  className="btn btn-danger danger-btn"
+                  onClick={handleClearProfileHistoryProtected}
+                >
+                  Limpar Histórico de Pesagens
+                </button>
+
+                <button 
+                  type="button" 
+                  className="btn btn-danger danger-btn"
+                  onClick={handleClearHistoryProtected}
+                >
+                  Limpar Histórico de Treinos
+                </button>
+              </div>
+            </div>
+          </div>
         )}
-
-        <div className="backup-actions-grid" style={{ display: "flex", gap: "8px" }}>
-          <button 
-            type="button" 
-            className="btn btn-secondary"
-            onClick={handleExportJSON}
-            style={{ justifyContent: "center", fontSize: "0.8rem", padding: "8px 12px", flex: 1 }}
-          >
-            <DownloadIcon size={14} /> Exportar JSON
-          </button>
-
-          <button 
-            type="button" 
-            className="btn btn-secondary"
-            onClick={() => fileInputRef.current?.click()}
-            style={{ justifyContent: "center", fontSize: "0.8rem", padding: "8px 12px", flex: 1 }}
-          >
-            <UploadIcon size={14} /> Importar JSON
-          </button>
-
-          <input 
-            type="file"
-            accept=".json"
-            ref={fileInputRef}
-            onChange={handleFileImport}
-            style={{ display: "none" }}
-          />
-        </div>
       </section>
 
-      {/* 6. Danger Zone Card */}
-      <section className="settings-section glass danger-zone-card">
-        <h3 className="section-title text-danger">Zona de Perigo</h3>
-        <p className="sync-info-text" style={{ marginBottom: "14px", marginTop: "6px" }}>
-          Ações irreversíveis sobre os seus dados locais salvos no aparelho.
-        </p>
+      <style>{`
+        .advanced-toggle-btn {
+          width: 100%;
+          background: none;
+          border: none;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0;
+          cursor: pointer;
+          color: inherit;
+          text-align: left;
+        }
 
-        <div className="danger-actions-column">
-          <button 
-            type="button" 
-            className="btn btn-danger danger-btn"
-            onClick={onClearProfileHistory}
-          >
-            Limpar Histórico de Pesagens
-          </button>
+        .advanced-title-group {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+        }
 
-          <button 
-            type="button" 
-            className="btn btn-danger danger-btn"
-            onClick={onClearHistory}
-          >
-            Limpar Histórico de Treinos
-          </button>
-        </div>
-      </section>
+        .advanced-subtitle {
+          font-size: 0.78rem;
+          color: var(--color-text-secondary);
+        }
+
+        .advanced-chevron {
+          font-size: 0.85rem;
+          color: var(--color-text-muted);
+          transition: transform 0.2s ease;
+        }
+
+        .advanced-subcard {
+          padding: 14px;
+          border-radius: 16px;
+          background: var(--bg-card);
+          border: 1px solid var(--border-color);
+        }
+
+        .advanced-subcard-title {
+          font-size: 0.9rem;
+          font-weight: 600;
+          margin: 0;
+        }
+
+        .text-danger {
+          color: var(--status-error);
+        }
+      `}</style>
     </div>
   );
 }
+
