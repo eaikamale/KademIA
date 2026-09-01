@@ -118,7 +118,7 @@ export default function Dashboard({ workoutData, history, onStartWorkout, onSetA
               aria-label="Sincronizar com a nuvem"
               style={{
                 display: "inline-flex",
-                align-items: "center",
+                alignItems: "center",
                 gap: "4px",
                 padding: "6px 10px",
                 borderRadius: "20px",
@@ -141,7 +141,7 @@ export default function Dashboard({ workoutData, history, onStartWorkout, onSetA
               aria-label="Entrar com o Google para sincronizar"
               style={{
                 display: "inline-flex",
-                align-items: "center",
+                alignItems: "center",
                 gap: "4px",
                 padding: "6px 10px",
                 borderRadius: "20px",
