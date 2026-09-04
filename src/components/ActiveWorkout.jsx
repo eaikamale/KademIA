@@ -210,19 +210,45 @@ export default function ActiveWorkout({ routine, history, onSaveWorkout, onCance
 
   const handleSetDataChange = (exIdx, setIdx, field, value) => {
     const updated = [...exercisesState];
-    updated[exIdx].setsData[setIdx][field] = value;
+    const set = updated[exIdx].setsData[setIdx];
+    set[field] = value;
+    
+    // Auto-mark completed if load or reps has a valid non-empty value
+    const loadVal = parseFloat(set.load);
+    const repsVal = String(set.reps || "").trim();
+    if ((!isNaN(loadVal) && loadVal > 0) || (repsVal !== "" && repsVal !== "0")) {
+      set.completed = true;
+    }
+
     setExercisesState(updated);
   };
 
   // Adjust values using buttons (+ / -)
   const adjustSetValue = (exIdx, setIdx, field, delta) => {
     const updated = [...exercisesState];
-    const currentValue = parseFloat(updated[exIdx].setsData[setIdx][field]) || 0;
+    const set = updated[exIdx].setsData[setIdx];
+    const currentValue = parseFloat(set[field]) || 0;
     const newValue = Math.max(0, currentValue + delta);
     
-    updated[exIdx].setsData[setIdx][field] = field === "reps"
+    set[field] = field === "reps"
       ? Math.round(newValue).toString()
       : (Number.isInteger(newValue) ? newValue.toString() : newValue.toFixed(1));
+
+    // Auto-mark set completed on adjustment
+    set.completed = true;
+
+    setExercisesState(updated);
+  };
+
+  // Quick action: toggle all sets completed for a specific exercise
+  const handleToggleAllSetsForExercise = (exIdx) => {
+    const updated = [...exercisesState];
+    const sets = updated[exIdx].setsData;
+    const allCompleted = sets.every(s => s.completed);
+    
+    sets.forEach(s => {
+      s.completed = !allCompleted;
+    });
 
     setExercisesState(updated);
   };
@@ -284,12 +310,17 @@ export default function ActiveWorkout({ routine, history, onSaveWorkout, onCance
     const completedExercises = exercisesState.map((ex) => ({
       name: ex.name,
       sets: ex.sets,
-      setsData: ex.setsData.map((s) => ({
-        setNum: s.setNum,
-        load: s.load,
-        reps: s.reps,
-        completed: s.completed
-      }))
+      setsData: ex.setsData.map((s) => {
+        const loadVal = parseFloat(s.load);
+        const repsVal = String(s.reps || "").trim();
+        const isDataFilled = (!isNaN(loadVal) && loadVal > 0) || (repsVal !== "" && repsVal !== "0");
+        return {
+          setNum: s.setNum,
+          load: s.load,
+          reps: s.reps,
+          completed: s.completed || isDataFilled
+        };
+      })
     }));
 
     // Clear active workout state on finish
@@ -312,6 +343,12 @@ export default function ActiveWorkout({ routine, history, onSaveWorkout, onCance
       onSaveWorkout(completedSession);
     }
   };
+
+  const totalExercisesCount = exercisesState.length;
+  const completedExercisesCount = exercisesState.filter((ex) =>
+    ex.setsData && ex.setsData.some((s) => s.completed)
+  ).length;
+  const progressPercent = totalExercisesCount > 0 ? Math.round((completedExercisesCount / totalExercisesCount) * 100) : 0;
 
   return (
     <div className="active-workout-container animate-fade-in">
@@ -338,6 +375,14 @@ export default function ActiveWorkout({ routine, history, onSaveWorkout, onCance
         <div>
           <span className="routine-tag-large">{routine.id}</span>
           <h2 className="routine-title-large">{routine.name}</h2>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "6px" }}>
+            <span style={{ fontSize: "0.8rem", color: "var(--color-text-secondary)", fontWeight: "600" }}>
+              Progresso: {completedExercisesCount}/{totalExercisesCount} exercícios ({progressPercent}%)
+            </span>
+            <div style={{ flex: 1, maxWidth: "120px", height: "6px", background: "rgba(255, 255, 255, 0.1)", borderRadius: "3px", overflow: "hidden" }}>
+              <div style={{ width: `${progressPercent}%`, height: "100%", background: "var(--accent-lime)", transition: "width 0.3s ease" }}></div>
+            </div>
+          </div>
         </div>
         <button className="btn-cancel" onClick={onCancelWorkout}>
           Desistir
@@ -350,6 +395,8 @@ export default function ActiveWorkout({ routine, history, onSaveWorkout, onCance
           <div className="exercises-list-wrapper">
             {exercisesState.map((ex, exIdx) => {
               const isCardio = isCardioEx(ex.name);
+              const isExCompleted = ex.setsData && ex.setsData.length > 0 && ex.setsData.every(s => s.completed);
+
               return (
                 <div key={ex.id} className="exercise-workout-card glass">
                   <div className="ex-card-header">
@@ -367,7 +414,28 @@ export default function ActiveWorkout({ routine, history, onSaveWorkout, onCance
                       )}
                     </div>
                     
-                    <div className="ex-card-header-actions">
+                    <div className="ex-card-header-actions" style={{ gap: "6px", display: "flex", alignItems: "center" }}>
+                      <button
+                        type="button"
+                        onClick={() => handleToggleAllSetsForExercise(exIdx)}
+                        style={{
+                          padding: "4px 8px",
+                          borderRadius: "6px",
+                          border: isExCompleted ? "1px solid var(--accent-lime)" : "1px solid var(--border-color)",
+                          background: isExCompleted ? "rgba(173, 255, 47, 0.15)" : "rgba(255, 255, 255, 0.05)",
+                          color: isExCompleted ? "var(--accent-lime)" : "var(--color-text-secondary)",
+                          fontSize: "0.72rem",
+                          fontWeight: "600",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "4px"
+                        }}
+                        title={isExCompleted ? "Desmarcar todas as séries" : "Marcar todas as séries como concluídas"}
+                      >
+                        {isExCompleted ? "✓ Concluído" : "Concluir Todas"}
+                      </button>
+
                       {/* Exercise Reordering Buttons */}
                       <div className="ex-order-buttons">
                         <button

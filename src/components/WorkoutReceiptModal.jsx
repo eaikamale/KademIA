@@ -103,6 +103,9 @@ export default function WorkoutReceiptModal({ session, profile, onClose }) {
               Vol: {totalVolume.toLocaleString("pt-BR")} kg
             </div>
             <div style={{ padding: "4px 10px", borderRadius: "8px", background: "rgba(173, 255, 47, 0.15)", border: "1px solid var(--accent-lime)", fontSize: "0.8rem", color: "var(--accent-lime)", fontWeight: "700" }}>
+              Exercícios: {session.exercises?.filter(ex => ex.setsData?.some(s => s.completed || (parseFloat(s.load) > 0 || (s.reps && String(s.reps).trim() !== "" && String(s.reps).trim() !== "0")))).length || 0}/{session.exercises?.length || 0}
+            </div>
+            <div style={{ padding: "4px 10px", borderRadius: "8px", background: "rgba(173, 255, 47, 0.15)", border: "1px solid var(--accent-lime)", fontSize: "0.8rem", color: "var(--accent-lime)", fontWeight: "700" }}>
               Séries: {completedSetsCount}/{session.exercises?.reduce((a, e) => a + (e.setsData?.length || 0), 0) || 0}
             </div>
           </div>
@@ -112,26 +115,46 @@ export default function WorkoutReceiptModal({ session, profile, onClose }) {
           {/* Exercise List with Set Bubbles */}
           <div className="receipt-exercises-breakdown" style={{ textAlign: "left" }}>
             <h5 className="details-title" style={{ fontSize: "0.9rem", color: "#fff", marginBottom: "12px" }}>Exercícios Realizados</h5>
-            {session.exercises?.map((ex, idx) => (
-              <div key={idx} className="details-ex-item" style={{ marginBottom: "14px" }}>
-                <span className="details-ex-name" style={{ fontSize: "0.9rem", fontWeight: "700", color: "#f1f5f9", display: "block", marginBottom: "6px" }}>{ex.name}</span>
-                <div className="details-sets-list" style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                  {ex.setsData?.map((set, setIdx) => (
-                    <div key={setIdx} className={`details-set-bubble ${set.completed ? "ok" : "nok"}`} style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "4px 8px", borderRadius: "6px", background: "rgba(255, 255, 255, 0.05)", border: "1px solid rgba(255, 255, 255, 0.12)", fontSize: "0.78rem" }}>
-                      <span className="set-num" style={{ color: "var(--color-text-muted)", fontWeight: "600" }}>{set.setNum || (setIdx + 1)}ª</span>
-                      <span className="set-val" style={{ color: "#fff", fontWeight: "700" }}>
-                        {set.load ? `${set.load}kg` : "--"} × {set.reps || "0"}
+            {session.exercises?.map((ex, idx) => {
+              const isExSkipped = !ex.setsData || ex.setsData.length === 0 || !ex.setsData.some(s => s.completed || (parseFloat(s.load) > 0 || (s.reps && String(s.reps).trim() !== "" && String(s.reps).trim() !== "0")));
+
+              if (isExSkipped) {
+                return (
+                  <div key={idx} className="details-ex-item" style={{ marginBottom: "12px", opacity: 0.75 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                      <span className="details-ex-name" style={{ fontSize: "0.88rem", fontWeight: "600", color: "var(--color-text-secondary)" }}>{ex.name}</span>
+                      <span style={{ fontSize: "0.72rem", padding: "2px 8px", borderRadius: "10px", background: "rgba(255, 255, 255, 0.06)", border: "1px solid rgba(255, 255, 255, 0.1)", color: "var(--color-text-muted)", fontWeight: "600" }}>
+                        Pulado / Não realizado
                       </span>
-                      {set.completed ? (
-                        <span style={{ color: "#4ade80", fontWeight: "bold", marginLeft: "2px" }}>✓</span>
-                      ) : (
-                        <span style={{ color: "#ef4444", fontWeight: "bold", marginLeft: "2px" }}>✕</span>
-                      )}
                     </div>
-                  ))}
+                  </div>
+                );
+              }
+
+              return (
+                <div key={idx} className="details-ex-item" style={{ marginBottom: "14px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                    <span className="details-ex-name" style={{ fontSize: "0.9rem", fontWeight: "700", color: "#f1f5f9" }}>{ex.name}</span>
+                    <span style={{ fontSize: "0.72rem", color: "#4ade80", fontWeight: "700" }}>✓ Executado</span>
+                  </div>
+                  <div className="details-sets-list" style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                    {ex.setsData?.map((set, setIdx) => (
+                      <div key={setIdx} className={`details-set-bubble ${set.completed ? "ok" : "nok"}`} style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "4px 8px", borderRadius: "6px", background: "rgba(255, 255, 255, 0.05)", border: "1px solid rgba(255, 255, 255, 0.12)", fontSize: "0.78rem" }}>
+                        <span className="set-num" style={{ color: "var(--color-text-muted)", fontWeight: "600" }}>{set.setNum || (setIdx + 1)}ª</span>
+                        <span className="set-val" style={{ color: "#fff", fontWeight: "700" }}>
+                          {set.load ? `${set.load}kg` : "--"} × {set.reps || "0"}
+                        </span>
+                        {set.completed ? (
+                          <span style={{ color: "#4ade80", fontWeight: "bold", marginLeft: "2px" }}>✓</span>
+                        ) : (
+                          <span style={{ color: "#ef4444", fontWeight: "bold", marginLeft: "2px" }}>✕</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="receipt-divider-dashed"></div>

@@ -274,6 +274,11 @@ export default function History({ history, onClearHistory, onDeleteWorkout, sync
                     return acc + (ex.setsData?.filter(s => s.completed).length || 0);
                   }, 0) || 0;
 
+                  const totalExercisesCount = session.exercises?.length || 0;
+                  const completedExercisesCount = session.exercises?.filter(ex => 
+                    ex.setsData?.some(s => s.completed || (parseFloat(s.load) > 0 || (s.reps && String(s.reps).trim() !== "" && String(s.reps).trim() !== "0")))
+                  ).length || 0;
+
                   return (
                     <div key={session.id || sIdx} className="history-day-card receipt-paper animate-slide-up">
                       {/* Ticket Header: KADEMIA Brand (left) | TÁ PAGO Stamp + Share Icon Button (right) */}
@@ -331,6 +336,9 @@ export default function History({ history, onClearHistory, onDeleteWorkout, sync
                           <span>Vol: {totalVolume.toLocaleString("pt-BR")} kg</span>
                         </div>
                         <div className="meta-badge green-highlight" style={{ background: "rgba(173, 255, 47, 0.15)", borderColor: "var(--accent-lime)", color: "var(--accent-lime)", fontWeight: "700" }}>
+                          <span>Exercícios: {completedExercisesCount}/{totalExercisesCount}</span>
+                        </div>
+                        <div className="meta-badge green-highlight" style={{ background: "rgba(173, 255, 47, 0.15)", borderColor: "var(--accent-lime)", color: "var(--accent-lime)", fontWeight: "700" }}>
                           <span>Séries: {completedSetsCount}/{totalSetsCount}</span>
                         </div>
                       </div>
@@ -348,26 +356,46 @@ export default function History({ history, onClearHistory, onDeleteWorkout, sync
                       <div className="hist-details" style={{ margin: 0 }}>
                         <h5 className="details-title" style={{ fontSize: "0.95rem", marginBottom: "12px" }}>Exercícios Realizados</h5>
                         <div className="details-exercises-list">
-                          {session.exercises?.map((ex, exIdx) => (
-                            <div key={exIdx} className="details-ex-item" style={{ marginBottom: "14px" }}>
-                              <span className="details-ex-name" style={{ fontWeight: "700", display: "block", marginBottom: "6px" }}>{ex.name}</span>
-                              <div className="details-sets-list">
-                                {ex.setsData?.map((set, setIdx) => (
-                                  <div key={setIdx} className={`details-set-bubble ${set.completed ? "ok" : "nok"}`}>
-                                    <span className="set-num">{set.setNum || (setIdx + 1)}ª</span>
-                                    <span className="set-val">
-                                      {set.load ? `${set.load}kg` : "--"} × {set.reps || "0"}
+                          {session.exercises?.map((ex, exIdx) => {
+                            const isExSkipped = !ex.setsData || ex.setsData.length === 0 || !ex.setsData.some(s => s.completed || (parseFloat(s.load) > 0 || (s.reps && String(s.reps).trim() !== "" && String(s.reps).trim() !== "0")));
+
+                            if (isExSkipped) {
+                              return (
+                                <div key={exIdx} className="details-ex-item" style={{ marginBottom: "12px", opacity: 0.75 }}>
+                                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                                    <span className="details-ex-name" style={{ fontWeight: "600", color: "var(--color-text-secondary)", fontSize: "0.88rem" }}>{ex.name}</span>
+                                    <span style={{ fontSize: "0.72rem", padding: "2px 8px", borderRadius: "10px", background: "rgba(255, 255, 255, 0.06)", border: "1px solid rgba(255, 255, 255, 0.1)", color: "var(--color-text-muted)", fontWeight: "600" }}>
+                                      Pulado / Não realizado
                                     </span>
-                                    {set.completed ? (
-                                      <span className="set-check-ok">✓</span>
-                                    ) : (
-                                      <span className="set-check-nok">✕</span>
-                                    )}
                                   </div>
-                                ))}
+                                </div>
+                              );
+                            }
+
+                            return (
+                              <div key={exIdx} className="details-ex-item" style={{ marginBottom: "14px" }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                                  <span className="details-ex-name" style={{ fontWeight: "700", display: "block" }}>{ex.name}</span>
+                                  <span style={{ fontSize: "0.72rem", color: "#4ade80", fontWeight: "700" }}>✓ Executado</span>
+                                </div>
+                                <div className="details-sets-list">
+                                  {ex.setsData?.map((set, setIdx) => (
+                                    <div key={setIdx} className={`details-set-bubble ${set.completed ? "ok" : "nok"}`}>
+                                      <span className="set-num">{set.setNum || (setIdx + 1)}ª</span>
+                                      <span className="set-val">
+                                        {set.load ? `${set.load}kg` : "--"} × {set.reps || "0"}
+                                      </span>
+                                      {set.completed ? (
+                                        <span className="set-check-ok">✓</span>
+                                      ) : (
+                                        <span className="set-check-nok">✕</span>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
 

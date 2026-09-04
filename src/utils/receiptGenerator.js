@@ -61,30 +61,41 @@ export function generateWorkoutReceiptImage(session, profile) {
       contentH += 24; // Divider
       contentH += 28; // Title "Exercícios Realizados"
 
+      const completedExercisesCount = exercises.filter(ex => 
+        ex.setsData?.some(s => s.completed || (parseFloat(s.load) > 0 || (s.reps && String(s.reps).trim() !== "" && String(s.reps).trim() !== "0")))
+      ).length;
+      const totalExercisesCount = exercises.length;
+
       exercises.forEach((ex) => {
         contentH += 28; // Exercise Name
         const sets = ex.setsData || [];
-        let currBubbleX = marginX + 24;
-        let bubbleRows = 1;
+        const isExSkipped = sets.length === 0 || !sets.some(s => s.completed || (parseFloat(s.load) > 0 || (s.reps && String(s.reps).trim() !== "" && String(s.reps).trim() !== "0")));
 
-        sets.forEach((set, sIdx) => {
-          const loadStr = set.load ? `${set.load}kg` : "--";
-          const repsStr = set.reps || "0";
-          const numStr = `${set.setNum || (sIdx + 1)}ª `;
-          const valStr = `${loadStr} × ${repsStr} `;
-          const numW = dCtx.measureText(numStr).width;
-          const valW = dCtx.measureText(valStr).width;
-          const symW = dCtx.measureText("✓").width;
-          const bubbleW = numW + valW + symW + 20;
+        if (isExSkipped) {
+          contentH += 16;
+        } else {
+          let currBubbleX = marginX + 24;
+          let bubbleRows = 1;
 
-          if (currBubbleX + bubbleW > width - marginX - 24 && currBubbleX > marginX + 24) {
-            currBubbleX = marginX + 24;
-            bubbleRows++;
-          }
-          currBubbleX += bubbleW + 8;
-        });
+          sets.forEach((set, sIdx) => {
+            const loadStr = set.load ? `${set.load}kg` : "--";
+            const repsStr = set.reps || "0";
+            const numStr = `${set.setNum || (sIdx + 1)}ª `;
+            const valStr = `${loadStr} × ${repsStr} `;
+            const numW = dCtx.measureText(numStr).width;
+            const valW = dCtx.measureText(valStr).width;
+            const symW = dCtx.measureText("✓").width;
+            const bubbleW = numW + valW + symW + 20;
 
-        contentH += bubbleRows * 34 + 10;
+            if (currBubbleX + bubbleW > width - marginX - 24 && currBubbleX > marginX + 24) {
+              currBubbleX = marginX + 24;
+              bubbleRows++;
+            }
+            currBubbleX += bubbleW + 8;
+          });
+
+          contentH += bubbleRows * 34 + 10;
+        }
       });
 
       contentH += 20; // Bottom inner padding after exercises
@@ -247,13 +258,13 @@ export function generateWorkoutReceiptImage(session, profile) {
 
       y += 24;
 
-      // Athlete Name & Formatted Date Line (e.g. "Atleta: Wagner • sex., 28 de agosto de 2026")
-      ctx.fillStyle = "#CBD5E1";
+      // Athlete Name & Formatted Date Line
+      ctx.fillStyle = "#94A3B8";
       ctx.font = "13px sans-serif";
       ctx.textAlign = "left";
-      ctx.fillText(`Atleta: ${athleteName} • ${formattedDate}`, marginX + 24, y + 6);
+      ctx.fillText(`Atleta: ${athleteName} • ${formattedDate}`, marginX + 24, y + 4);
 
-      y += 32;
+      y += 24;
 
       // Summary Badges Row (Duration | Volume | Séries Concluídas)
       ctx.textAlign = "left";
@@ -278,8 +289,9 @@ export function generateWorkoutReceiptImage(session, profile) {
       };
 
       let pillX = marginX + 24;
-      pillX += drawBadgePill(pillX, `⏱️ ${session.duration || 0} min`) + 10;
-      pillX += drawBadgePill(pillX, `Vol: ${totalVolume.toLocaleString("pt-BR")} kg`) + 10;
+      pillX += drawBadgePill(pillX, `⏱️ ${session.duration || 0} min`) + 8;
+      pillX += drawBadgePill(pillX, `Vol: ${totalVolume.toLocaleString("pt-BR")} kg`) + 8;
+      pillX += drawBadgePill(pillX, `Ex: ${completedExercisesCount}/${totalExercisesCount}`, true) + 8;
       drawBadgePill(pillX, `Séries: ${completedSetsCount}/${totalSetsCount}`, true);
 
       y += 44;
@@ -304,68 +316,77 @@ export function generateWorkoutReceiptImage(session, profile) {
 
       // Exercise items with set bubbles (✓ green / ✕ red)
       exercises.forEach((ex) => {
-        // Exercise Name
-        ctx.fillStyle = "#F1F5F9";
-        ctx.font = "bold 15px sans-serif";
-        ctx.fillText(ex.name, marginX + 24, y);
-
-        y += 10;
-
-        // Render set bubbles
         const sets = ex.setsData || [];
-        let currBubbleX = marginX + 24;
+        const isExSkipped = sets.length === 0 || !sets.some(s => s.completed || (parseFloat(s.load) > 0 || (s.reps && String(s.reps).trim() !== "" && String(s.reps).trim() !== "0")));
 
-        sets.forEach((set, sIdx) => {
-          const loadStr = set.load ? `${set.load}kg` : "--";
-          const repsStr = set.reps || "0";
-          const symbol = set.completed ? "✓" : "✕";
+        if (isExSkipped) {
+          ctx.fillStyle = "#64748B";
+          ctx.font = "14px sans-serif";
+          ctx.fillText(`${ex.name} — Pulado / Não realizado`, marginX + 24, y);
+          y += 26;
+        } else {
+          // Exercise Name
+          ctx.fillStyle = "#F1F5F9";
+          ctx.font = "bold 15px sans-serif";
+          ctx.fillText(ex.name, marginX + 24, y);
 
-          ctx.font = "bold 12px sans-serif";
-          const numStr = `${set.setNum || (sIdx + 1)}ª `;
-          const valStr = `${loadStr} × ${repsStr} `;
-          
-          const numW = ctx.measureText(numStr).width;
-          const valW = ctx.measureText(valStr).width;
-          const symW = ctx.measureText(symbol).width;
+          y += 10;
 
-          const bubbleW = numW + valW + symW + 20;
+          // Render set bubbles
+          let currBubbleX = marginX + 24;
 
-          // Wrap to next line if bubble exceeds inner container width
-          if (currBubbleX + bubbleW > width - marginX - 24 && currBubbleX > marginX + 24) {
-            currBubbleX = marginX + 24;
-            y += 34;
-          }
+          sets.forEach((set, sIdx) => {
+            const loadStr = set.load ? `${set.load}kg` : "--";
+            const repsStr = set.reps || "0";
+            const symbol = set.completed ? "✓" : "✕";
 
-          // Draw set bubble background
-          ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
-          ctx.strokeStyle = "rgba(255, 255, 255, 0.12)";
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          if (typeof ctx.roundRect === "function") {
-            ctx.roundRect(currBubbleX, y + 6, bubbleW, 26, 6);
-          } else {
-            ctx.rect(currBubbleX, y + 6, bubbleW, 26);
-          }
-          ctx.fill();
-          ctx.stroke();
+            ctx.font = "bold 12px sans-serif";
+            const numStr = `${set.setNum || (sIdx + 1)}ª `;
+            const valStr = `${loadStr} × ${repsStr} `;
+            
+            const numW = ctx.measureText(numStr).width;
+            const valW = ctx.measureText(valStr).width;
+            const symW = ctx.measureText(symbol).width;
 
-          // Render text inside bubble
-          let txtX = currBubbleX + 10;
-          ctx.fillStyle = "#94A3B8"; // set num
-          ctx.fillText(numStr, txtX, y + 23);
-          txtX += numW;
+            const bubbleW = numW + valW + symW + 20;
 
-          ctx.fillStyle = "#FFFFFF"; // load x reps
-          ctx.fillText(valStr, txtX, y + 23);
-          txtX += valW;
+            // Wrap to next line if bubble exceeds inner container width
+            if (currBubbleX + bubbleW > width - marginX - 24 && currBubbleX > marginX + 24) {
+              currBubbleX = marginX + 24;
+              y += 34;
+            }
 
-          ctx.fillStyle = set.completed ? "#4ADE80" : "#EF4444"; // symbol ✓ green or ✕ red
-          ctx.fillText(symbol, txtX, y + 23);
+            // Draw set bubble background
+            ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.12)";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            if (typeof ctx.roundRect === "function") {
+              ctx.roundRect(currBubbleX, y + 6, bubbleW, 26, 6);
+            } else {
+              ctx.rect(currBubbleX, y + 6, bubbleW, 26);
+            }
+            ctx.fill();
+            ctx.stroke();
 
-          currBubbleX += bubbleW + 8;
-        });
+            // Render text inside bubble
+            let txtX = currBubbleX + 10;
+            ctx.fillStyle = "#94A3B8"; // set num
+            ctx.fillText(numStr, txtX, y + 23);
+            txtX += numW;
 
-        y += 38;
+            ctx.fillStyle = "#FFFFFF"; // load x reps
+            ctx.fillText(valStr, txtX, y + 23);
+            txtX += valW;
+
+            ctx.fillStyle = set.completed ? "#4ADE80" : "#EF4444"; // symbol ✓ green or ✕ red
+            ctx.fillText(symbol, txtX, y + 23);
+
+            currBubbleX += bubbleW + 8;
+          });
+
+          y += 38;
+        }
       });
 
       // Export as PNG Blob with transparent background

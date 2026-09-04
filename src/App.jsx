@@ -53,7 +53,16 @@ function deduplicateHistory(historyList) {
               const num = parseInt(set.setNum) || 1;
               if (!seenSets.has(num)) {
                 seenSets.add(num);
-                uniqueSets.push(set);
+                // Retroactively normalize completed status for sets with filled data
+                const loadVal = parseFloat(set.load);
+                const repsVal = String(set.reps || "").trim();
+                const isDataFilled = (!isNaN(loadVal) && loadVal > 0) || (repsVal !== "" && repsVal !== "0");
+                const isCompleted = set.completed === true || isDataFilled;
+
+                uniqueSets.push({
+                  ...set,
+                  completed: isCompleted
+                });
               }
             });
           }
@@ -82,7 +91,15 @@ function deduplicateHistory(historyList) {
               const num = parseInt(set.setNum) || 1;
               const hasSet = existingEx.setsData.some(s => (parseInt(s.setNum) || 1) === num);
               if (!hasSet) {
-                existingEx.setsData.push(set);
+                const loadVal = parseFloat(set.load);
+                const repsVal = String(set.reps || "").trim();
+                const isDataFilled = (!isNaN(loadVal) && loadVal > 0) || (repsVal !== "" && repsVal !== "0");
+                const isCompleted = set.completed === true || isDataFilled;
+
+                existingEx.setsData.push({
+                  ...set,
+                  completed: isCompleted
+                });
               }
             });
           }
